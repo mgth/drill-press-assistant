@@ -4,6 +4,7 @@ import {
   createThreeShaftMachine,
   createTwoShaftMachine,
   defaultPairs,
+  stepName,
   validateMachine,
   type Machine,
   type PulleyStack,
@@ -86,6 +87,17 @@ describe("defaultPairs", () => {
     const a: PulleyStack = { id: "a", label: "A", steps: [100, 80] };
     const b: PulleyStack = { id: "b", label: "B", steps: [60, 80, 100] };
     expect(defaultPairs(a, b)).toEqual([]);
+  });
+});
+
+describe("stepName", () => {
+  it("utilise le repère gravé quand il existe, sinon le numéro", () => {
+    const named: PulleyStack = { id: "a", label: "A", steps: [50, 70], stepNames: ["A", "B"] };
+    const bare: PulleyStack = { id: "b", label: "B", steps: [50, 70] };
+    const blank: PulleyStack = { id: "c", label: "C", steps: [50, 70], stepNames: ["", "  "] };
+    expect(stepName(named, 1)).toBe("B");
+    expect(stepName(bare, 1)).toBe("2");
+    expect(stepName(blank, 0)).toBe("1"); // repère vide → retombe sur le numéro
   });
 });
 

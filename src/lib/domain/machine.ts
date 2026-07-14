@@ -9,6 +9,19 @@ export interface PulleyStack {
   id: string;
   label: string;
   steps: number[];
+  /** Noms des étages tels que gravés sur la machine (ex. A, B, C ou 1, 2, 3). Défaut : numéro. */
+  stepNames?: string[];
+}
+
+export function stepName(stack: PulleyStack, i: number): string {
+  return stack.stepNames?.[i]?.trim() || String(i + 1);
+}
+
+/** Normalise un cône chargé depuis la persistance (données d'avant les repères d'étages). */
+export function ensureStepNames(stack: PulleyStack): void {
+  if (!stack.stepNames || stack.stepNames.length !== stack.steps.length) {
+    stack.stepNames = stack.steps.map((_, i) => stepName(stack, i));
+  }
 }
 
 export interface Shaft {
@@ -146,11 +159,13 @@ export function createTwoShaftMachine(): Machine {
     id: newId(),
     label: "Cône moteur",
     steps: [100, 87, 74, 61, 48],
+    stepNames: ["1", "2", "3", "4", "5"],
   };
   const spindle: PulleyStack = {
     id: newId(),
     label: "Cône broche",
     steps: [48, 61, 74, 87, 100],
+    stepNames: ["A", "B", "C", "D", "E"],
   };
   return {
     id: newId(),
@@ -178,6 +193,7 @@ export function createThreeShaftMachine(): Machine {
     id: newId(),
     label: "Cône moteur",
     steps: [110, 90, 70, 50],
+    stepNames: ["1", "2", "3", "4"],
   };
   const midIn: PulleyStack = {
     id: newId(),
@@ -193,6 +209,7 @@ export function createThreeShaftMachine(): Machine {
     id: newId(),
     label: "Cône broche",
     steps: [50, 70, 90, 110],
+    stepNames: ["A", "B", "C", "D"],
   };
   return {
     id: newId(),

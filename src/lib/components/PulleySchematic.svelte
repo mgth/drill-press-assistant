@@ -1,6 +1,6 @@
 <script lang="ts">
   import { shaftRpms } from "$lib/domain/calc";
-  import type { Machine } from "$lib/domain/machine";
+  import { stepName, type Machine } from "$lib/domain/machine";
 
   let {
     machine,
@@ -143,7 +143,9 @@
           class="step"
           class:selected={layout.isSelected(s, st, i)}
         />
-        <text x={layout.shaftX[s]} y={y + STEP_H / 2} class="dia-label">{d}</text>
+        <text x={layout.shaftX[s]} y={y + STEP_H / 2} class="dia-label">
+          {stepName(stack, i)} · {d}
+        </text>
       {/each}
     {/each}
   {/each}

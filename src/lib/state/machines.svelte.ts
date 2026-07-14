@@ -1,6 +1,7 @@
 import {
   createThreeShaftMachine,
   createTwoShaftMachine,
+  ensureStepNames,
   type Machine,
 } from "$lib/domain/machine";
 
@@ -37,6 +38,8 @@ class MachinesState {
 
   /** Hydratation depuis la persistance (M4). */
   load(machines: Machine[], currentId: string | null): void {
+    for (const m of machines)
+      for (const shaft of m.shafts) shaft.stacks.forEach(ensureStepNames);
     this.machines = machines;
     this.currentId =
       currentId && machines.some((m) => m.id === currentId)

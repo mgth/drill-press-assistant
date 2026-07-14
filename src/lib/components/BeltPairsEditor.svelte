@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { defaultPairs, type Belt, type Machine } from "$lib/domain/machine";
+  import { defaultPairs, stepName, type Belt, type Machine } from "$lib/domain/machine";
   import { fr } from "$lib/i18n/fr";
 
   let { machine, belt, index }: { machine: Machine; belt: Belt; index: number } = $props();
@@ -32,13 +32,13 @@
       <li>
         <select bind:value={pair[0]} aria-label="étage menant">
           {#each fromStack.steps as d, s}
-            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
+            <option value={s}>{stepName(fromStack, s)} ({d} mm)</option>
           {/each}
         </select>
         →
         <select bind:value={pair[1]} aria-label="étage mené">
           {#each toStack.steps as d, s}
-            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
+            <option value={s}>{stepName(toStack, s)} ({d} mm)</option>
           {/each}
         </select>
         <button

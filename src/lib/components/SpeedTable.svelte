@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Combination } from "$lib/domain/calc";
-  import type { Machine } from "$lib/domain/machine";
+  import { stepName, type Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
   import { fr } from "$lib/i18n/fr";
 
@@ -21,9 +21,9 @@
   function pairLabel(combo: Combination, k: number): string {
     const belt = machine.belts[k];
     const [i, j] = combo.pairs[k];
-    const dFrom = machine.shafts[belt.fromShaft].stacks[belt.fromStack].steps[i];
-    const dTo = machine.shafts[belt.toShaft].stacks[belt.toStack].steps[j];
-    return `Ét. ${i + 1} (${dFrom} mm) → Ét. ${j + 1} (${dTo} mm)`;
+    const from = machine.shafts[belt.fromShaft].stacks[belt.fromStack];
+    const to = machine.shafts[belt.toShaft].stacks[belt.toStack];
+    return `${stepName(from, i)} (${from.steps[i]} mm) → ${stepName(to, j)} (${to.steps[j]} mm)`;
   }
 </script>
 
