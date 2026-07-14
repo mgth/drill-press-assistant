@@ -8,11 +8,40 @@
   import MachinePicker from "$lib/components/MachinePicker.svelte";
   import PulleySchematic from "$lib/components/PulleySchematic.svelte";
   import SpeedTable from "$lib/components/SpeedTable.svelte";
+  import { getBackend, type PersistedState, type StorageBackend } from "$lib/storage/storage";
   import { fr } from "$lib/i18n/fr";
 
   let tab = $state<"machine" | "drilling">("machine");
+  let backend = $state<StorageBackend | null>(null);
 
-  if (machinesState.machines.length === 0) machinesState.addTwoShaft();
+  $effect(() => {
+    getBackend().then(async (b) => {
+      const saved = await b.load();
+      if (saved) {
+        machinesState.load(saved.machines, saved.currentMachineId);
+        advisorState.load(saved.lastAdvisor);
+      }
+      if (machinesState.machines.length === 0) machinesState.addTwoShaft();
+      backend = b;
+    });
+  });
+
+  // Sauvegarde débouncée de tout l'état persistant (uniquement après hydratation).
+  $effect(() => {
+    if (!backend) return;
+    const snapshot: PersistedState = {
+      version: 1,
+      machines: $state.snapshot(machinesState.machines),
+      currentMachineId: machinesState.currentId,
+      lastAdvisor: {
+        materialId: advisorState.materialId,
+        diameterMm: advisorState.diameterMm,
+        carbide: advisorState.carbide,
+      },
+    };
+    const timer = setTimeout(() => backend?.save(snapshot), 500);
+    return () => clearTimeout(timer);
+  });
 
   const machine = $derived(machinesState.current);
   const machineValid = $derived(
@@ -45,7 +74,9 @@
     </nav>
   </header>
 
-  {#if tab === "machine"}
+  {#if !backend}
+    <!-- hydratation en cours -->
+  {:else if tab === "machine"}
     <MachinePicker />
     {#if machine}
       <MachineEditor {machine} />
