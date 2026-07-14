@@ -53,7 +53,20 @@
         </button>
       </div>
     </div>
-    <div class="break" aria-hidden="true"></div>
+    <div class="vc-block">
+      <span class="bit-label">{fr.advisor.vc} (m/min)</span>
+      <div class="quick" role="group" aria-label={fr.advisor.vc}>
+        {#each Array.from({ length: 20 }, (_, i) => (i + 1) * 5) as v}
+          <button
+            type="button"
+            class:active={advisorState.vc === v}
+            onclick={() => advisorState.setVc(v)}
+          >
+            {v}
+          </button>
+        {/each}
+      </div>
+    </div>
     <label class="dia">
       {fr.advisor.diameter}
       <input
@@ -74,20 +87,6 @@
           {d}
         </button>
       {/each}
-    </div>
-    <div class="vc-block">
-      <span class="bit-label">{fr.advisor.vc} (m/min)</span>
-      <div class="quick" role="group" aria-label={fr.advisor.vc}>
-        {#each Array.from({ length: 20 }, (_, i) => (i + 1) * 5) as v}
-          <button
-            type="button"
-            class:active={advisorState.vc === v}
-            onclick={() => advisorState.setVc(v)}
-          >
-            {v}
-          </button>
-        {/each}
-      </div>
     </div>
   </div>
   {#if ideal !== null}
@@ -164,11 +163,6 @@
     min-width: 0;
   }
 
-  /* Saut de ligne flex : le diamètre ouvre sa propre ligne. */
-  .break {
-    flex-basis: 100%;
-    height: 0;
-  }
 
   .bit-label {
     font-weight: 600;
