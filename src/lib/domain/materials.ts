@@ -26,20 +26,22 @@ export function materialById(id: string): Material | undefined {
   return MATERIALS.find((m) => m.id === id);
 }
 
-/**
- * Abréviation du couple matériau/foret correspondant exactement à cette Vc
- * (HSS prioritaire, suffixe « C » pour carbure), ou null.
- */
-export function vcMaterialAbbr(vc: number): string | null {
-  for (const m of MATERIALS) if (m.vcHss === vc) return m.abbrFr;
-  for (const m of MATERIALS) if (m.vcHss * CARBIDE_FACTOR === vc) return `${m.abbrFr} C`;
-  return null;
+/** Matériau dont la Vc correspond exactement à cette valeur pour ce type de foret, ou null. */
+export function vcMaterial(vc: number, carbide: boolean): Material | null {
+  const factor = carbide ? CARBIDE_FACTOR : 1;
+  return MATERIALS.find((m) => m.vcHss * factor === vc) ?? null;
 }
 
-/** Valeurs de la frise Vc : grille de 5 à 100 par pas de 5, plus toutes les Vc des matériaux. */
-export const VC_CHIP_VALUES: number[] = [
-  ...new Set([
-    ...Array.from({ length: 20 }, (_, i) => (i + 1) * 5),
-    ...MATERIALS.flatMap((m) => [m.vcHss, m.vcHss * CARBIDE_FACTOR]),
-  ]),
-].sort((a, b) => a - b);
+/**
+ * Valeurs de la frise Vc pour un type de foret : grille de 5 à 100 par pas
+ * de 5, plus les Vc des matériaux pour ce type.
+ */
+export function vcChipValues(carbide: boolean): number[] {
+  const factor = carbide ? CARBIDE_FACTOR : 1;
+  return [
+    ...new Set([
+      ...Array.from({ length: 20 }, (_, i) => (i + 1) * 5),
+      ...MATERIALS.map((m) => m.vcHss * factor),
+    ]),
+  ].sort((a, b) => a - b);
+}

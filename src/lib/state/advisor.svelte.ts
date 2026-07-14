@@ -1,13 +1,5 @@
-import { CARBIDE_FACTOR, MATERIALS, materialById } from "$lib/domain/materials";
+import { CARBIDE_FACTOR, materialById, vcMaterial } from "$lib/domain/materials";
 import type { AdvisorSettings } from "$lib/storage/storage";
-
-/** Matériau + type de foret correspondant exactement à cette Vc, s'il existe (HSS prioritaire). */
-function matchVc(vc: number): { materialId: string; carbide: boolean } | null {
-  for (const mat of MATERIALS) if (mat.vcHss === vc) return { materialId: mat.id, carbide: false };
-  for (const mat of MATERIALS)
-    if (mat.vcHss * CARBIDE_FACTOR === vc) return { materialId: mat.id, carbide: true };
-  return null;
-}
 
 class AdvisorState {
   materialId = $state("steel");
@@ -39,15 +31,14 @@ class AdvisorState {
   }
 
   /**
-   * Vc choisie dans la frise : si elle correspond à un couple matériau/foret
-   * connu, on le sélectionne ; sinon la Vc devient « personnalisée »
-   * (matériau et type de foret désélectionnés).
+   * Vc choisie dans la frise : si elle correspond à un matériau pour le type
+   * de foret courant, on le sélectionne ; sinon la Vc devient
+   * « personnalisée » (matériau et type de foret désélectionnés).
    */
   setVc(vc: number): void {
-    const match = matchVc(vc);
-    if (match) {
-      this.materialId = match.materialId;
-      this.carbide = match.carbide;
+    const mat = vcMaterial(vc, this.carbide);
+    if (mat) {
+      this.materialId = mat.id;
       this.vcOverride = null;
     } else {
       this.vcOverride = vc;

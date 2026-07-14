@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { MATERIALS, VC_CHIP_VALUES, vcMaterialAbbr } from "$lib/domain/materials";
+  import { MATERIALS, vcChipValues, vcMaterial } from "$lib/domain/materials";
   import { advisorState } from "$lib/state/advisor.svelte";
   import { fr } from "$lib/i18n/fr";
 
   const fmt = (v: number) => String(v).replace(".", ",");
+  const vcValues = $derived(vcChipValues(advisorState.carbide));
 
   const ideal = $derived(
     advisorState.diameterMm > 0 && advisorState.vc > 0
@@ -58,7 +59,7 @@
     <div class="vc-block">
       <span class="bit-label">{fr.advisor.vc} (m/min)</span>
       <div class="quick" role="group" aria-label={fr.advisor.vc}>
-        {#each VC_CHIP_VALUES as v}
+        {#each vcValues as v}
           <button
             type="button"
             class="vc-chip"
@@ -66,7 +67,7 @@
             onclick={() => advisorState.setVc(v)}
           >
             <span>{fmt(v)}</span>
-            <span class="abbr">{vcMaterialAbbr(v) ?? " "}</span>
+            <span class="abbr">{vcMaterial(v, advisorState.carbide)?.abbrFr ?? " "}</span>
           </button>
         {/each}
       </div>
