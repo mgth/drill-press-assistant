@@ -54,13 +54,13 @@
         />
         <select bind:value={pair[0]} aria-label="étage menant">
           {#each fromStack.steps as d, s}
-            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
+            <option value={s}>Ét. {s + 1} · {d} mm</option>
           {/each}
         </select>
-        →
+        <span class="arrow">→</span>
         <select bind:value={pair[1]} aria-label="étage mené">
           {#each toStack.steps as d, s}
-            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
+            <option value={s}>Ét. {s + 1} · {d} mm</option>
           {/each}
         </select>
         <button
@@ -93,17 +93,28 @@
   li {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
   }
 
   li input.name {
-    width: 3.5rem;
+    flex: none;
+    width: 3rem;
     text-align: center;
     font-weight: 600;
   }
 
+  li select {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  li .arrow {
+    flex: none;
+  }
+
   li button {
+    flex: none;
     min-height: 36px;
     padding: 0.2rem 0.55rem;
   }
