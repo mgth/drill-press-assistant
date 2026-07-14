@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDeviation, recommend } from "$lib/domain/advisor";
+  import { diameterRanges, formatDeviation, recommend } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
   import { pairName, validateMachine, type Machine } from "$lib/domain/machine";
   import { advisorState, comboKey } from "$lib/state/advisor.svelte";
@@ -130,6 +130,7 @@
         {machine}
         combinations={reco.all}
         ideal={reco.ideal}
+        ranges={diameterRanges(reco.all, advisorState.vc)}
         {recommendedKey}
         selectedKey={comboKey(displayed.pairs)}
         onSelect={(c) => (advisorState.selectedKey = comboKey(c.pairs))}

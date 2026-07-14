@@ -48,6 +48,8 @@ export const fr = {
     position: "Courroie",
     spindleRpm: "Broche (tr/min)",
     deviation: "Écart",
+    diaRange: "Ø conseillé (mm)",
+    allDiameters: "tous",
     recommendedBadge: "recommandé",
     selectedBadge: "affiché",
   },

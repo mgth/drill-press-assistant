@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDeviation } from "$lib/domain/advisor";
+  import { formatDeviation, type DiameterRange } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
   import { pairName, type Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
@@ -9,6 +9,7 @@
     machine,
     combinations,
     ideal,
+    ranges,
     recommendedKey,
     selectedKey,
     onSelect,
@@ -17,10 +18,21 @@
     combinations: Combination[];
     /** Vitesse idéale (tr/min) pour la colonne d'écart. */
     ideal: number;
+    /** Plage de Ø recommandée par combinaison, alignée sur combinations. */
+    ranges: Array<DiameterRange | null>;
     recommendedKey: string | null;
     selectedKey: string;
     onSelect: (combo: Combination) => void;
   } = $props();
+
+  function rangeLabel(r: DiameterRange | null): string {
+    if (!r) return "—";
+    const f = (d: number) => (d >= 10 ? d.toFixed(1) : d.toFixed(2)).replace(".", ",");
+    if (r.min === null && r.max === null) return fr.table.allDiameters;
+    if (r.max === null) return `≥ ${f(r.min!)}`;
+    if (r.min === null) return `≤ ${f(r.max)}`;
+    return `${f(r.min)} – ${f(r.max)}`;
+  }
 
   function pairLabel(combo: Combination, k: number): string {
     const belt = machine.belts[k];
@@ -46,11 +58,12 @@
         {/each}
         <th class="num">{fr.table.spindleRpm}</th>
         <th class="num">{fr.table.deviation}</th>
+        <th class="num">{fr.table.diaRange}</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      {#each combinations as combo}
+      {#each combinations as combo, idx}
         {@const key = comboKey(combo.pairs)}
         <tr
           class:recommended={key === recommendedKey}
@@ -62,6 +75,7 @@
           {/each}
           <td class="num"><strong>{Math.round(combo.spindleRpm)}</strong></td>
           <td class="num muted">{formatDeviation(combo.spindleRpm, ideal)}</td>
+          <td class="num muted range">{rangeLabel(ranges[idx])}</td>
           <td class="badges">
             {#if key === recommendedKey}
               <span class="badge rec">{fr.table.recommendedBadge}</span>

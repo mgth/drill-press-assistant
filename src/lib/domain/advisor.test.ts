@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatDeviation, idealRpm, recommend } from "./advisor";
+import { diameterRanges, formatDeviation, idealRpm, recommend } from "./advisor";
+import { enumerateCombinations } from "./calc";
 import { materialById } from "./materials";
 import { createTwoShaftMachine, defaultPairs, type Machine, type PulleyStack } from "./machine";
 
@@ -74,5 +75,52 @@ describe("deviation", () => {
     expect(formatDeviation(1220, 1100)).toBe("+11 %");
     expect(formatDeviation(720, 1100)).toBe("−35 %");
     expect(formatDeviation(1100, 1100)).toBe("+0 %");
+  });
+});
+
+describe("diameterRanges", () => {
+  it("borne les plages à la bascule (r1 + 2·r2)/3, en cohérence avec recommend", () => {
+    const m = twoShaft(1000, [72, 122], [100, 100]); // 720 et 1220 tr/min
+    const vc = 11 * Math.PI; // idéal = 11000 / d
+    const all = enumerateCombinations(m);
+    const ranges = diameterRanges(all, vc);
+    // Bascule à I* = (720 + 2×1220)/3 = 1053,33 tr/min → d* = 11000/1053,33 ≈ 10,44 mm
+    const dStar = 11000 / ((720 + 2 * 1220) / 3);
+    expect(ranges[0]).toEqual({ min: expect.closeTo(dStar, 6), max: null }); // 720 : les gros Ø
+    expect(ranges[1]).toEqual({ min: null, max: expect.closeTo(dStar, 6) }); // 1220 : les petits Ø
+    // Cohérence : de part et d'autre de la bascule, recommend choisit la bonne vitesse
+    expect(Math.round(recommend(m, vc, dStar - 0.01).best.spindleRpm)).toBe(1220);
+    expect(Math.round(recommend(m, vc, dStar + 0.01).best.spindleRpm)).toBe(720);
+  });
+
+  it("ne donne une plage qu'au premier représentant d'une vitesse en doublon", () => {
+    // 100/50 et 50/25 mm donnent le même rapport → deux combos à la même vitesse
+    const motor: PulleyStack = { id: "m", label: "M", steps: [100, 50] };
+    const spindle: PulleyStack = { id: "s", label: "S", steps: [50, 25] };
+    const m: Machine = {
+      id: "t",
+      name: "t",
+      motorRpm: 1000,
+      shafts: [
+        { id: "a", label: "Moteur", stacks: [motor] },
+        { id: "b", label: "Broche", stacks: [spindle] },
+      ],
+      belts: [
+        {
+          fromShaft: 0,
+          fromStack: 0,
+          toShaft: 1,
+          toStack: 0,
+          allowedPairs: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+      ],
+    };
+    const all = enumerateCombinations(m); // deux fois 2000 tr/min
+    const ranges = diameterRanges(all, 25);
+    expect(ranges[0]).toEqual({ min: null, max: null }); // seule vitesse → tous les Ø
+    expect(ranges[1]).toBeNull(); // doublon jamais recommandé
   });
 });
