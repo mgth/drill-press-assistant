@@ -89,13 +89,18 @@
 
   .quick {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.4rem;
     flex-basis: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .quick button {
-    min-width: 44px;
+    flex: none;
+    min-width: 48px;
     padding: 0.45rem 0;
     text-align: center;
     font-weight: 600;
