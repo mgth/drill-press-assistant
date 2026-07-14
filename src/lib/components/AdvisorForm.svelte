@@ -69,7 +69,7 @@
 
   .fields {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     flex-wrap: wrap;
     align-items: end;
   }
@@ -79,12 +79,16 @@
     flex-direction: column;
     gap: 0.3rem;
     font-weight: 600;
+    /* Matériau et Ø se partagent la même ligne, même sur mobile. */
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 14rem;
   }
 
   label input,
   label select {
     font-weight: 400;
-    max-width: 12rem;
+    width: 100%;
   }
 
   .quick {
