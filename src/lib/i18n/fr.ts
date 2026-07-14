@@ -45,7 +45,7 @@ export const fr = {
   },
   table: {
     title: "Toutes les vitesses",
-    position: "Courroie",
+    position: "Position",
     spindleRpm: "Broche (tr/min)",
     deviation: "Écart",
     diaRange: "Ø conseillé (mm)",

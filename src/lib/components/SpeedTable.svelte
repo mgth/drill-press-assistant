@@ -1,9 +1,10 @@
 <script lang="ts">
   import { formatDeviation, type DiameterRange } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
-  import { pairName, type Machine } from "$lib/domain/machine";
+  import type { Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
   import { fr } from "$lib/i18n/fr";
+  import PulleySchematic from "./PulleySchematic.svelte";
 
   let {
     machine,
@@ -34,18 +35,6 @@
     return `${f(r.min)} – ${f(r.max)}`;
   }
 
-  function pairLabel(combo: Combination, k: number): string {
-    const belt = machine.belts[k];
-    const [i, j] = combo.pairs[k];
-    const from = machine.shafts[belt.fromShaft].stacks[belt.fromStack];
-    const to = machine.shafts[belt.toShaft].stacks[belt.toStack];
-    return `${pairName(belt, combo.pairIndexes[k])} (${from.steps[i]} → ${to.steps[j]} mm)`;
-  }
-
-  /** Colonnes dans l'ordre d'affichage du schéma (inversé si broche à gauche). */
-  const beltOrder = $derived(
-    machine.belts.map((_, k) => (machine.spindleLeft ? machine.belts.length - 1 - k : k)),
-  );
 </script>
 
 <div class="card">
@@ -53,9 +42,7 @@
   <table>
     <thead>
       <tr>
-        {#each beltOrder as k}
-          <th>{fr.table.position} {k + 1}</th>
-        {/each}
+        <th>{fr.table.position}</th>
         <th class="num">{fr.table.spindleRpm}</th>
         <th class="num">{fr.table.deviation}</th>
         <th class="num">{fr.table.diaRange}</th>
@@ -70,9 +57,9 @@
           class:selected={key === selectedKey}
           onclick={() => onSelect(combo)}
         >
-          {#each beltOrder as k}
-            <td>{pairLabel(combo, k)}</td>
-          {/each}
+          <td class="pos">
+            <PulleySchematic {machine} pairs={combo.pairs} pairIndexes={combo.pairIndexes} mini />
+          </td>
           <td class="num"><strong>{Math.round(combo.spindleRpm)}</strong></td>
           <td class="num muted">{formatDeviation(combo.spindleRpm, ideal)}</td>
           <td class="num muted range">{rangeLabel(ranges[idx])}</td>
@@ -109,6 +96,11 @@
 
   .num {
     text-align: right;
+  }
+
+  .pos {
+    width: 150px;
+    min-width: 120px;
   }
 
   tbody tr {
