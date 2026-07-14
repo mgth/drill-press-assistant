@@ -19,6 +19,7 @@ export const fr = {
     stepDiameter: "Ø (mm)",
     pairName: "Repère de la position (tel que gravé sur la machine)",
     belt: "Courroie",
+    sharedCone: "Cône unique (entrée et sortie sur le même cône)",
     beltPairs: "Positions possibles",
     beltPairHint: "étage menant → étage mené",
     addPair: "Ajouter une position",

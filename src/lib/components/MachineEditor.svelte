@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { syncBeltPairs, validateMachine, type Machine } from "$lib/domain/machine";
+  import {
+    isSharedIntermediate,
+    setSharedIntermediate,
+    syncBeltPairs,
+    validateMachine,
+    type Machine,
+  } from "$lib/domain/machine";
   import { fr } from "$lib/i18n/fr";
   import BeltPairsEditor from "./BeltPairsEditor.svelte";
   import StackEditor from "./StackEditor.svelte";
@@ -30,9 +36,19 @@
   {/if}
 
   <div class="shafts">
-    {#each machine.shafts as shaft}
+    {#each machine.shafts as shaft, s}
       <div class="card">
         <h3>{shaft.label}</h3>
+        {#if s > 0 && s < machine.shafts.length - 1}
+          <label class="shared">
+            <input
+              type="checkbox"
+              checked={isSharedIntermediate(machine, s)}
+              onchange={(e) => setSharedIntermediate(machine, s, e.currentTarget.checked)}
+            />
+            {fr.machine.sharedCone}
+          </label>
+        {/if}
         {#each shaft.stacks as stack}
           <StackEditor {stack} onStepsChanged={() => syncBeltPairs(machine)} />
         {/each}
@@ -82,6 +98,18 @@
 
   .shafts h3 {
     font-size: 1rem;
+  }
+
+  label.shared {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 400;
+    margin-bottom: 0.6rem;
+  }
+
+  label.shared input {
+    min-height: auto;
   }
 
   .issues {

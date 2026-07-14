@@ -38,21 +38,25 @@
       );
     });
 
-    // Rangée de chaque cône = indice de la première courroie qui l'utilise,
-    // pour que les deux cônes reliés par une courroie soient à la même hauteur.
-    const stackRow = machine.shafts.map((shaft) => shaft.stacks.map(() => Infinity));
-    machine.belts.forEach((belt, k) => {
-      stackRow[belt.fromShaft][belt.fromStack] = Math.min(stackRow[belt.fromShaft][belt.fromStack], k);
-      stackRow[belt.toShaft][belt.toStack] = Math.min(stackRow[belt.toShaft][belt.toStack], k);
+    // Rangée verticale de chaque cône : les deux cônes reliés par une
+    // courroie sont à la même hauteur (un cône partagé aligne donc les trois
+    // arbres), et les cônes d'un même arbre s'empilent.
+    const stackRow = machine.shafts.map((shaft) => shaft.stacks.map((_, st) => st));
+    machine.belts.forEach((belt) => {
+      const base = stackRow[belt.fromShaft][belt.fromStack];
+      stackRow[belt.toShaft] = machine.shafts[belt.toShaft].stacks.map(
+        (_, st) => base + (st - belt.toStack),
+      );
     });
+    const minRow = Math.min(...stackRow.flat());
+    const rowCount = Math.max(...stackRow.flat()) - minRow + 1;
 
-    const rowCount = Math.max(1, ...stackRow.flat().filter(Number.isFinite).map((r) => r + 1));
     const rowHeight = Array.from({ length: rowCount }, (_, r) =>
       Math.max(
         0,
         ...machine.shafts.flatMap((shaft, s) =>
           shaft.stacks
-            .filter((_, st) => (Number.isFinite(stackRow[s][st]) ? stackRow[s][st] : 0) === r)
+            .filter((_, st) => stackRow[s][st] - minRow === r)
             .map((stack) => stack.steps.length * (STEP_H + STEP_GAP)),
         ),
       ),
@@ -64,9 +68,7 @@
 
     // Position y du haut de chaque cône.
     const stackY = machine.shafts.map((shaft, s) =>
-      shaft.stacks.map((_, st) =>
-        rowY[Number.isFinite(stackRow[s][st]) ? stackRow[s][st] : 0],
-      ),
+      shaft.stacks.map((_, st) => rowY[stackRow[s][st] - minRow]),
     );
 
     const stepMidY = (s: number, st: number, i: number) =>

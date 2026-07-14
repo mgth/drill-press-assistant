@@ -6,7 +6,9 @@ import {
   defaultPairNames,
   defaultPairs,
   ensurePairNames,
+  isSharedIntermediate,
   pairName,
+  setSharedIntermediate,
   validateMachine,
   type Machine,
   type PulleyStack,
@@ -89,6 +91,50 @@ describe("defaultPairs", () => {
     const a: PulleyStack = { id: "a", label: "A", steps: [100, 80] };
     const b: PulleyStack = { id: "b", label: "B", steps: [60, 80, 100] };
     expect(defaultPairs(a, b)).toEqual([]);
+  });
+});
+
+describe("cône intermédiaire partagé", () => {
+  function sharedMachine(): Machine {
+    const m = createThreeShaftMachine();
+    setSharedIntermediate(m, 1, true);
+    return m;
+  }
+
+  it("setSharedIntermediate fusionne les cônes et fait pointer les deux courroies dessus", () => {
+    const m = sharedMachine();
+    expect(m.shafts[1].stacks).toHaveLength(1);
+    expect(m.belts[0].toStack).toBe(0);
+    expect(m.belts[1].fromStack).toBe(0);
+    expect(isSharedIntermediate(m, 1)).toBe(true);
+    expect(validateMachine(m).every((i) => i.level !== "error")).toBe(true);
+  });
+
+  it("exclut les combinaisons où les deux courroies occupent le même étage", () => {
+    const m = sharedMachine();
+    // 4 × 4 = 16 combinaisons, moins les 4 où entrée et sortie partagent l'étage
+    const combos = enumerateCombinations(m);
+    expect(combos).toHaveLength(12);
+    for (const c of combos) {
+      expect(c.pairs[0][1]).not.toBe(c.pairs[1][0]);
+    }
+  });
+
+  it("ne filtre rien quand l'arbre intermédiaire a deux cônes", () => {
+    const m = sharedMachine();
+    setSharedIntermediate(m, 1, false);
+    expect(m.shafts[1].stacks).toHaveLength(2);
+    expect(isSharedIntermediate(m, 1)).toBe(false);
+    expect(enumerateCombinations(m)).toHaveLength(16);
+  });
+
+  it("signale une machine sans aucune combinaison possible", () => {
+    const m = sharedMachine();
+    // Une seule position par courroie, toutes deux sur l'étage 2 du cône partagé
+    m.belts[0].allowedPairs = [[0, 2]];
+    m.belts[1].allowedPairs = [[2, 0]];
+    expect(enumerateCombinations(m)).toHaveLength(0);
+    expect(validateMachine(m).some((i) => i.level === "error")).toBe(true);
   });
 });
 

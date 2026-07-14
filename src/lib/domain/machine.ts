@@ -1,8 +1,11 @@
 /**
  * Modèle générique d'une transmission par courroies de perceuse à colonne :
  * une chaîne linéaire d'arbres (moteur → [intermédiaire] → broche), chaque
- * arbre portant un ou deux cônes de poulies étagées.
+ * arbre portant un ou deux cônes de poulies étagées. Un arbre intermédiaire
+ * à cône unique se modélise en faisant référencer le même cône par la
+ * courroie d'entrée et celle de sortie.
  */
+import { enumerateCombinations } from "./calc";
 
 /** Cône de poulies étagées. Diamètres en mm, index 0 = étage du HAUT. */
 export interface PulleyStack {
@@ -146,7 +149,50 @@ export function validateMachine(m: Machine): Issue[] {
       );
   });
 
+  if (
+    issues.every((i) => i.level !== "error") &&
+    enumerateCombinations(m).length === 0
+  )
+    err(
+      "Aucune combinaison possible : sur un cône partagé, les deux courroies ne peuvent pas occuper le même étage.",
+    );
+
   return issues;
+}
+
+/** true si l'arbre intermédiaire utilise le même cône pour l'entrée et la sortie. */
+export function isSharedIntermediate(m: Machine, shaftIndex: number): boolean {
+  const beltIn = m.belts[shaftIndex - 1];
+  const beltOut = m.belts[shaftIndex];
+  return !!beltIn && !!beltOut && beltIn.toStack === beltOut.fromStack;
+}
+
+/**
+ * Bascule un arbre intermédiaire entre cône unique partagé (les deux
+ * courroies sur le même cône, étages entrée/sortie forcément distincts) et
+ * double cône (un cône par courroie).
+ */
+export function setSharedIntermediate(m: Machine, shaftIndex: number, shared: boolean): void {
+  const shaft = m.shafts[shaftIndex];
+  if (!shaft || shaftIndex <= 0 || shaftIndex >= m.shafts.length - 1) return;
+  const beltIn = m.belts[shaftIndex - 1];
+  const beltOut = m.belts[shaftIndex];
+  if (shared && shaft.stacks.length > 1) {
+    shaft.stacks = [shaft.stacks[0]];
+    shaft.stacks[0].label = "Cône intermédiaire";
+    beltIn.toStack = 0;
+    beltOut.fromStack = 0;
+  } else if (!shared && shaft.stacks.length === 1) {
+    const src = shaft.stacks[0];
+    src.label = "Cône intermédiaire (entrée)";
+    shaft.stacks = [
+      src,
+      { id: newId(), label: "Cône intermédiaire (sortie)", steps: [...src.steps] },
+    ];
+    beltIn.toStack = 0;
+    beltOut.fromStack = 1;
+  }
+  syncBeltPairs(m);
 }
 
 /**
