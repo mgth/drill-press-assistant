@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { MATERIALS } from "$lib/domain/materials";
+  import { MATERIALS, VC_CHIP_VALUES, vcMaterialAbbr } from "$lib/domain/materials";
   import { advisorState } from "$lib/state/advisor.svelte";
   import { fr } from "$lib/i18n/fr";
+
+  const fmt = (v: number) => String(v).replace(".", ",");
 
   const ideal = $derived(
     advisorState.diameterMm > 0 && advisorState.vc > 0
@@ -56,13 +58,15 @@
     <div class="vc-block">
       <span class="bit-label">{fr.advisor.vc} (m/min)</span>
       <div class="quick" role="group" aria-label={fr.advisor.vc}>
-        {#each Array.from({ length: 20 }, (_, i) => (i + 1) * 5) as v}
+        {#each VC_CHIP_VALUES as v}
           <button
             type="button"
+            class="vc-chip"
             class:active={advisorState.vc === v}
             onclick={() => advisorState.setVc(v)}
           >
-            {v}
+            <span>{fmt(v)}</span>
+            <span class="abbr">{vcMaterialAbbr(v) ?? " "}</span>
           </button>
         {/each}
       </div>
@@ -148,6 +152,26 @@
   .quick button.active {
     background: var(--accent);
     border-color: var(--accent);
+    color: #fff;
+  }
+
+  .quick button.vc-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    line-height: 1.15;
+    padding: 0.35rem 0.5rem;
+    min-width: 56px;
+  }
+
+  .vc-chip .abbr {
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .vc-chip.active .abbr {
     color: #fff;
   }
 
