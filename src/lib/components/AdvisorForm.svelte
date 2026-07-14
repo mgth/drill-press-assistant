@@ -32,7 +32,7 @@
       />
     </label>
     <div class="quick" role="group" aria-label={fr.advisor.diameter}>
-      {#each Array.from({ length: 10 }, (_, i) => i + 1) as d}
+      {#each Array.from({ length: 20 }, (_, i) => i + 1) as d}
         <button
           type="button"
           class:active={advisorState.diameterMm === d}
