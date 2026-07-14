@@ -2,8 +2,10 @@
 export interface Material {
   id: string;
   labelFr: string;
-  /** Abréviation courte pour les jetons de la frise Vc. */
+  labelEn: string;
+  /** Abréviations courtes pour les jetons de la frise Vc. */
   abbrFr: string;
+  abbrEn: string;
   /** Vitesse de coupe Vc en m/min pour forets HSS. */
   vcHss: number;
 }
@@ -11,15 +13,16 @@ export interface Material {
 /** Vc carbure ≈ 2,5 × Vc HSS (ordre de grandeur). */
 export const CARBIDE_FACTOR = 2.5;
 
+// prettier-ignore
 export const MATERIALS: Material[] = [
-  { id: "steel", labelFr: "Acier (doux)", abbrFr: "Acier", vcHss: 25 },
-  { id: "stainless", labelFr: "Acier inoxydable", abbrFr: "Inox", vcHss: 12 },
-  { id: "cast-iron", labelFr: "Fonte", abbrFr: "Fonte", vcHss: 20 },
-  { id: "aluminum", labelFr: "Aluminium", abbrFr: "Alu", vcHss: 70 },
-  { id: "brass", labelFr: "Laiton / bronze", abbrFr: "Laiton", vcHss: 45 },
-  { id: "hardwood", labelFr: "Bois dur", abbrFr: "Bois d.", vcHss: 40 },
-  { id: "softwood", labelFr: "Bois tendre", abbrFr: "Bois t.", vcHss: 60 },
-  { id: "plastic", labelFr: "Plastique", abbrFr: "Plast.", vcHss: 35 },
+  { id: "steel", labelFr: "Acier (doux)", labelEn: "Mild steel", abbrFr: "Acier", abbrEn: "Steel", vcHss: 25 },
+  { id: "stainless", labelFr: "Acier inoxydable", labelEn: "Stainless steel", abbrFr: "Inox", abbrEn: "Stainl.", vcHss: 12 },
+  { id: "cast-iron", labelFr: "Fonte", labelEn: "Cast iron", abbrFr: "Fonte", abbrEn: "C. iron", vcHss: 20 },
+  { id: "aluminum", labelFr: "Aluminium", labelEn: "Aluminium", abbrFr: "Alu", abbrEn: "Alu", vcHss: 70 },
+  { id: "brass", labelFr: "Laiton / bronze", labelEn: "Brass / bronze", abbrFr: "Laiton", abbrEn: "Brass", vcHss: 45 },
+  { id: "hardwood", labelFr: "Bois dur", labelEn: "Hardwood", abbrFr: "Bois d.", abbrEn: "Hardw.", vcHss: 40 },
+  { id: "softwood", labelFr: "Bois tendre", labelEn: "Softwood", abbrFr: "Bois t.", abbrEn: "Softw.", vcHss: 60 },
+  { id: "plastic", labelFr: "Plastique", labelEn: "Plastic", abbrFr: "Plast.", abbrEn: "Plast.", vcHss: 35 },
 ];
 
 export function materialById(id: string): Material | undefined {

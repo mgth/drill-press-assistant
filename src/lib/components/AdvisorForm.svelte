@@ -1,9 +1,9 @@
 <script lang="ts">
   import { MATERIALS, vcChipValues, vcMaterial } from "$lib/domain/materials";
   import { advisorState } from "$lib/state/advisor.svelte";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
 
-  const fmt = (v: number) => String(v).replace(".", ",");
+  const fmt = (v: number) => i18n.formatNumber(v);
   const vcValues = $derived(vcChipValues(advisorState.carbide));
 
   let vcRow = $state<HTMLElement>();
@@ -38,10 +38,10 @@
 </script>
 
 <div class="card form">
-  <h2>{fr.advisor.title}</h2>
+  <h2>{i18n.t.advisor.title}</h2>
   <div class="fields">
     <label>
-      {fr.advisor.material}
+      {i18n.t.advisor.material}
       <select
         value={advisorState.custom ? "__custom__" : advisorState.materialId}
         onchange={(e) => {
@@ -50,16 +50,16 @@
         }}
       >
         {#if advisorState.custom}
-          <option value="__custom__">{fr.advisor.custom}</option>
+          <option value="__custom__">{i18n.t.advisor.custom}</option>
         {/if}
         {#each MATERIALS as mat}
-          <option value={mat.id}>{mat.labelFr}</option>
+          <option value={mat.id}>{i18n.materialLabel(mat)}</option>
         {/each}
       </select>
     </label>
     <div class="bit">
-      <span class="bit-label">{fr.advisor.bitType}</span>
-      <div class="seg" role="radiogroup" aria-label={fr.advisor.bitType}>
+      <span class="bit-label">{i18n.t.advisor.bitType}</span>
+      <div class="seg" role="radiogroup" aria-label={i18n.t.advisor.bitType}>
         <button
           type="button"
           role="radio"
@@ -67,7 +67,7 @@
           class:active={!advisorState.carbide && !advisorState.custom}
           onclick={() => advisorState.setCarbide(false)}
         >
-          {fr.advisor.hss}
+          {i18n.t.advisor.hss}
         </button>
         <button
           type="button"
@@ -76,14 +76,15 @@
           class:active={advisorState.carbide && !advisorState.custom}
           onclick={() => advisorState.setCarbide(true)}
         >
-          {fr.advisor.carbide}
+          {i18n.t.advisor.carbide}
         </button>
       </div>
     </div>
     <div class="vc-block">
-      <span class="bit-label">{fr.advisor.vc} (m/min)</span>
-      <div class="quick" role="group" aria-label={fr.advisor.vc} bind:this={vcRow}>
+      <span class="bit-label">{i18n.t.advisor.vc} (m/min)</span>
+      <div class="quick" role="group" aria-label={i18n.t.advisor.vc} bind:this={vcRow}>
         {#each vcValues as v}
+          {@const mat = vcMaterial(v, advisorState.carbide)}
           <button
             type="button"
             class="vc-chip"
@@ -91,13 +92,13 @@
             onclick={() => advisorState.setVc(v)}
           >
             <span>{fmt(v)}</span>
-            <span class="abbr">{vcMaterial(v, advisorState.carbide)?.abbrFr ?? " "}</span>
+            <span class="abbr">{mat ? i18n.materialAbbr(mat) : " "}</span>
           </button>
         {/each}
       </div>
     </div>
     <label class="dia">
-      {fr.advisor.diameter}
+      {i18n.t.advisor.diameter}
       <input
         type="number"
         inputmode="decimal"
@@ -106,7 +107,7 @@
         bind:value={advisorState.diameterMm}
       />
     </label>
-    <div class="quick" role="group" aria-label={fr.advisor.diameter} bind:this={diaRow}>
+    <div class="quick" role="group" aria-label={i18n.t.advisor.diameter} bind:this={diaRow}>
       {#each Array.from({ length: 20 }, (_, i) => i + 1) as d}
         <button
           type="button"
@@ -120,8 +121,8 @@
   </div>
   {#if ideal !== null}
     <p class="ideal">
-      {fr.advisor.vc} : <strong>{advisorState.vc} m/min</strong> —
-      {fr.advisor.idealRpm} : <strong>{Math.round(ideal)} {fr.advisor.rpm}</strong>
+      {i18n.t.advisor.vc} : <strong>{advisorState.vc} m/min</strong> —
+      {i18n.t.advisor.idealRpm} : <strong>{Math.round(ideal)} {i18n.t.advisor.rpm}</strong>
     </p>
   {/if}
 </div>

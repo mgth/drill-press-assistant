@@ -6,7 +6,7 @@
     validateMachine,
     type Machine,
   } from "$lib/domain/machine";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
   import BeltPairsEditor from "./BeltPairsEditor.svelte";
   import StackEditor from "./StackEditor.svelte";
   import Switch from "./Switch.svelte";
@@ -23,17 +23,17 @@
 <div class="editor">
   <div class="card general">
     <label>
-      {fr.machine.name}
+      {i18n.t.machine.name}
       <input type="text" bind:value={machine.name} />
     </label>
     <label>
-      {fr.machine.motorRpm}
+      {i18n.t.machine.motorRpm}
       <input type="number" inputmode="numeric" min="1" step="10" bind:value={machine.motorRpm} />
     </label>
     <div class="check">
       <Switch
         checked={machine.spindleLeft ?? false}
-        label={fr.machine.spindleLeft}
+        label={i18n.t.machine.spindleLeft}
         onchange={(v) => (machine.spindleLeft = v)}
       />
     </div>
@@ -42,7 +42,7 @@
   {#if issues.length > 0}
     <ul class="issues">
       {#each issues as issue}
-        <li class={issue.level}>{issue.message}</li>
+        <li class={issue.level}>{i18n.t.issues[issue.code](issue.params)}</li>
       {/each}
     </ul>
   {/if}
@@ -56,8 +56,8 @@
           <div class="shared">
             <Switch
               checked={isSharedIntermediate(machine, s)}
-              label={fr.machine.sharedCone}
-              onchange={(v) => setSharedIntermediate(machine, s, v)}
+              label={i18n.t.machine.sharedCone}
+              onchange={(v) => setSharedIntermediate(machine, s, v, i18n.t.factory)}
             />
           </div>
         {/if}

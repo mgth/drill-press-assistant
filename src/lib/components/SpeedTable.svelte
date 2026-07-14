@@ -3,7 +3,7 @@
   import type { Combination } from "$lib/domain/calc";
   import type { Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
   import PulleySchematic from "./PulleySchematic.svelte";
 
   let {
@@ -28,8 +28,8 @@
 
   function rangeLabel(r: DiameterRange | null): string {
     if (!r) return "—";
-    const f = (d: number) => (d >= 10 ? d.toFixed(1) : d.toFixed(2)).replace(".", ",");
-    if (r.min === null && r.max === null) return fr.table.allDiameters;
+    const f = (d: number) => i18n.formatNumber(d >= 10 ? Math.round(d * 10) / 10 : Math.round(d * 100) / 100);
+    if (r.min === null && r.max === null) return i18n.t.table.allDiameters;
     if (r.max === null) return `≥ ${f(r.min!)}`;
     if (r.min === null) return `≤ ${f(r.max)}`;
     return `${f(r.min)} – ${f(r.max)}`;
@@ -38,14 +38,14 @@
 </script>
 
 <div class="card">
-  <h2>{fr.table.title}</h2>
+  <h2>{i18n.t.table.title}</h2>
   <table>
     <thead>
       <tr>
-        <th>{fr.table.position}</th>
-        <th class="num">{fr.table.spindleRpm}</th>
-        <th class="num">{fr.table.deviation}</th>
-        <th class="num">{fr.table.diaRange}</th>
+        <th>{i18n.t.table.position}</th>
+        <th class="num">{i18n.t.table.spindleRpm}</th>
+        <th class="num">{i18n.t.table.deviation}</th>
+        <th class="num">{i18n.t.table.diaRange}</th>
       </tr>
     </thead>
     <tbody>
@@ -64,9 +64,9 @@
           <td class="num muted range">
             <div>{rangeLabel(ranges[idx])}</div>
             {#if key === recommendedKey}
-              <span class="badge rec">{fr.table.recommendedBadge}</span>
+              <span class="badge rec">{i18n.t.table.recommendedBadge}</span>
             {:else if key === selectedKey}
-              <span class="badge sel">{fr.table.selectedBadge}</span>
+              <span class="badge sel">{i18n.t.table.selectedBadge}</span>
             {/if}
           </td>
         </tr>

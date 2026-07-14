@@ -1,6 +1,7 @@
 <script lang="ts">
   import { shaftRpms } from "$lib/domain/calc";
   import { pairName, type Machine } from "$lib/domain/machine";
+  import { i18n } from "$lib/i18n/state.svelte";
 
   let {
     machine,
@@ -129,7 +130,7 @@
 <svg
   viewBox="0 0 {layout.width} {layout.height}"
   role="img"
-  aria-label="Schéma des poulies et position des courroies"
+  aria-label={i18n.t.schematic.aria}
   class:mini
 >
   {#each machine.shafts as shaft, s}
@@ -145,7 +146,7 @@
       <text x={layout.shaftX[s]} y={G.top - 14} class="shaft-label">{shaft.label}</text>
       {#if layout.rpms[s] !== undefined}
         <text x={layout.shaftX[s]} y={layout.height - 12} class="rpm-label">
-          {Math.round(layout.rpms[s])} tr/min
+          {Math.round(layout.rpms[s])} {i18n.t.advisor.rpm}
         </text>
       {/if}
     {/if}

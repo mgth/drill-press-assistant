@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PulleyStack } from "$lib/domain/machine";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
 
   let {
     stack,
@@ -23,26 +23,26 @@
   <ol>
     {#each stack.steps as _, i}
       <li>
-        <span class="muted">{fr.machine.step} {i + 1}</span>
+        <span class="muted">{i18n.t.machine.step} {i + 1}</span>
         <input
           type="number"
           inputmode="decimal"
           min="1"
           step="0.5"
           bind:value={stack.steps[i]}
-          aria-label="{stack.label} — {fr.machine.stepDiameter}"
+          aria-label="{stack.label} — {i18n.t.machine.stepDiameter}"
         />
         <span class="muted">mm</span>
         <button
           type="button"
           onclick={() => removeStep(i)}
           disabled={stack.steps.length <= 1}
-          title={fr.machine.removeStep}>✕</button
+          title={i18n.t.machine.removeStep}>✕</button
         >
       </li>
     {/each}
   </ol>
-  <button type="button" onclick={addStep}>{fr.machine.addStep}</button>
+  <button type="button" onclick={addStep}>{i18n.t.machine.addStep}</button>
 </div>
 
 <style>

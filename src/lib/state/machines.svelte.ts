@@ -4,6 +4,7 @@ import {
   ensurePairNames,
   type Machine,
 } from "$lib/domain/machine";
+import { i18n } from "$lib/i18n/state.svelte";
 
 class MachinesState {
   machines = $state<Machine[]>([]);
@@ -14,14 +15,14 @@ class MachinesState {
   }
 
   addTwoShaft(): Machine {
-    const m = createTwoShaftMachine();
+    const m = createTwoShaftMachine(i18n.t.factory);
     this.machines.push(m);
     this.currentId = m.id;
     return m;
   }
 
   addThreeShaft(): Machine {
-    const m = createThreeShaftMachine();
+    const m = createThreeShaftMachine(i18n.t.factory);
     this.machines.push(m);
     this.currentId = m.id;
     return m;

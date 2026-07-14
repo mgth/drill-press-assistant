@@ -14,6 +14,8 @@ export interface PersistedState {
   machines: Machine[];
   currentMachineId: string | null;
   lastAdvisor: AdvisorSettings | null;
+  /** Langue de l'interface (absente = français). */
+  locale?: "fr" | "en";
 }
 
 export interface StorageBackend {

@@ -6,7 +6,7 @@
     type Belt,
     type Machine,
   } from "$lib/domain/machine";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
 
   let { machine, belt, index }: { machine: Machine; belt: Belt; index: number } = $props();
 
@@ -37,11 +37,11 @@
 
 <div class="belt card">
   <h3>
-    {fr.machine.belt}
+    {i18n.t.machine.belt}
     {index + 1}
     <span class="muted">({fromStack.label} → {toStack.label})</span>
   </h3>
-  <div class="muted">{fr.machine.beltPairs} — {fr.machine.beltPairHint}</div>
+  <div class="muted">{i18n.t.machine.beltPairs} — {i18n.t.machine.beltPairHint}</div>
   <ul>
     {#each belt.allowedPairs as pair, i}
       <li>
@@ -49,33 +49,33 @@
           class="name"
           type="text"
           bind:value={belt.pairNames![i]}
-          aria-label={fr.machine.pairName}
-          title={fr.machine.pairName}
+          aria-label={i18n.t.machine.pairName}
+          title={i18n.t.machine.pairName}
         />
-        <select bind:value={pair[0]} aria-label="étage menant">
+        <select bind:value={pair[0]} aria-label={i18n.t.machine.drivingStep}>
           {#each fromStack.steps as d, s}
-            <option value={s}>Ét. {s + 1} · {d} mm</option>
+            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {d} mm</option>
           {/each}
         </select>
         <span class="arrow">→</span>
-        <select bind:value={pair[1]} aria-label="étage mené">
+        <select bind:value={pair[1]} aria-label={i18n.t.machine.drivenStep}>
           {#each toStack.steps as d, s}
-            <option value={s}>Ét. {s + 1} · {d} mm</option>
+            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {d} mm</option>
           {/each}
         </select>
         <button
           type="button"
           onclick={() => removePair(i)}
           disabled={belt.allowedPairs.length <= 1}
-          title={fr.machine.removeStep}>✕</button
+          title={i18n.t.machine.removeStep}>✕</button
         >
       </li>
     {/each}
   </ul>
   <div class="actions">
-    <button type="button" onclick={addPair}>{fr.machine.addPair}</button>
+    <button type="button" onclick={addPair}>{i18n.t.machine.addPair}</button>
     {#if fromStack.steps.length === toStack.steps.length}
-      <button type="button" onclick={reset}>{fr.machine.resetPairs}</button>
+      <button type="button" onclick={reset}>{i18n.t.machine.resetPairs}</button>
     {/if}
   </div>
 </div>

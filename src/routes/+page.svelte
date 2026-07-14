@@ -10,7 +10,7 @@
   import PulleySchematic from "$lib/components/PulleySchematic.svelte";
   import SpeedTable from "$lib/components/SpeedTable.svelte";
   import { getBackend, type PersistedState, type StorageBackend } from "$lib/storage/storage";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n, LOCALES, type LocaleId } from "$lib/i18n/state.svelte";
 
   let tab = $state<"machine" | "drilling">("machine");
   let backend = $state<StorageBackend | null>(null);
@@ -21,6 +21,7 @@
       if (saved) {
         machinesState.load(saved.machines, saved.currentMachineId);
         advisorState.load(saved.lastAdvisor);
+        if (saved.locale) i18n.locale = saved.locale;
       }
       if (machinesState.machines.length === 0) machinesState.addTwoShaft();
       backend = b;
@@ -40,6 +41,7 @@
         carbide: advisorState.carbide,
         vcOverride: advisorState.vcOverride,
       },
+      locale: i18n.locale,
     };
     const timer = setTimeout(() => backend?.save(snapshot), 500);
     return () => clearTimeout(timer);
@@ -87,14 +89,24 @@
 
 <main>
   <header>
-    <h1>{fr.appTitle}</h1>
+    <h1>{i18n.t.appTitle}</h1>
     <nav>
       <button type="button" class:active={tab === "machine"} onclick={() => (tab = "machine")}>
-        {fr.tabs.machine}
+        {i18n.t.tabs.machine}
       </button>
       <button type="button" class:active={tab === "drilling"} onclick={() => (tab = "drilling")}>
-        {fr.tabs.drilling}
+        {i18n.t.tabs.drilling}
       </button>
+      <select
+        class="lang"
+        aria-label="Langue / Language"
+        value={i18n.locale}
+        onchange={(e) => (i18n.locale = e.currentTarget.value as LocaleId)}
+      >
+        {#each LOCALES as l}
+          <option value={l.id}>{l.label}</option>
+        {/each}
+      </select>
     </nav>
   </header>
 
@@ -105,25 +117,25 @@
     {#if machine}
       <MachineEditor {machine} />
     {:else}
-      <p class="muted">{fr.machine.noMachine}</p>
+      <p class="muted">{i18n.t.machine.noMachine}</p>
     {/if}
   {:else}
     <AdvisorForm />
     {#if !machine || !machineValid}
-      <p class="warning card">{fr.advisor.invalidMachine}</p>
+      <p class="warning card">{i18n.t.advisor.invalidMachine}</p>
     {:else if reco && displayed}
       {#if reco.overspeed}
-        <p class="warning card">{fr.advisor.overspeedWarning}</p>
+        <p class="warning card">{i18n.t.advisor.overspeedWarning}</p>
       {/if}
       <div class="result card">
-        <h2>{fr.advisor.recommended}</h2>
+        <h2>{i18n.t.advisor.recommended}</h2>
         <p>
           <span class="position">{positionLabel(machine, displayed)}</span>
           —
-          <strong>{Math.round(displayed.spindleRpm)} {fr.advisor.rpm}</strong>
+          <strong>{Math.round(displayed.spindleRpm)} {i18n.t.advisor.rpm}</strong>
           <span class="dev">{formatDeviation(displayed.spindleRpm, reco.ideal)}</span>
           <span class="muted">
-            ({fr.advisor.idealRpm} : {Math.round(reco.ideal)} {fr.advisor.rpm})
+            ({i18n.t.advisor.idealRpm} : {Math.round(reco.ideal)} {i18n.t.advisor.rpm})
           </span>
         </p>
         <PulleySchematic {machine} pairs={displayed.pairs} pairIndexes={displayed.pairIndexes} />
@@ -173,6 +185,11 @@
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
+  }
+
+  select.lang {
+    min-height: 0;
+    padding: 0.45rem 0.5rem;
   }
 
   .warning {

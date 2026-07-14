@@ -69,10 +69,52 @@ export interface Machine {
   spindleLeft?: boolean;
 }
 
+export type IssueCode =
+  | "motor-rpm"
+  | "min-shafts"
+  | "belt-count"
+  | "empty-stack"
+  | "bad-diameter"
+  | "belt-chain"
+  | "stack-missing"
+  | "no-pairs"
+  | "pair-out-of-range"
+  | "diameter-sum"
+  | "no-combination";
+
+/** Problème de validation : le message localisé est rendu côté UI d'après le code. */
 export interface Issue {
   level: "error" | "warning";
-  message: string;
+  code: IssueCode;
+  params: Record<string, string | number>;
 }
+
+/** Libellés des gabarits, injectés par l'UI selon la langue (défaut : français). */
+export interface FactoryLabels {
+  twoShaftName: string;
+  threeShaftName: string;
+  motorShaft: string;
+  intermediateShaft: string;
+  spindleShaft: string;
+  motorCone: string;
+  spindleCone: string;
+  intermediateCone: string;
+  intermediateConeIn: string;
+  intermediateConeOut: string;
+}
+
+export const DEFAULT_FACTORY_LABELS: FactoryLabels = {
+  twoShaftName: "Perceuse 2 arbres",
+  threeShaftName: "Perceuse 3 arbres",
+  motorShaft: "Moteur",
+  intermediateShaft: "Intermédiaire",
+  spindleShaft: "Broche",
+  motorCone: "Cône moteur",
+  spindleCone: "Cône broche",
+  intermediateCone: "Cône intermédiaire",
+  intermediateConeIn: "Cône intermédiaire (entrée)",
+  intermediateConeOut: "Cône intermédiaire (sortie)",
+};
 
 export function newId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -103,20 +145,21 @@ export const BELT_SUM_TOLERANCE = 0.1;
 
 export function validateMachine(m: Machine): Issue[] {
   const issues: Issue[] = [];
-  const err = (message: string) => issues.push({ level: "error", message });
-  const warn = (message: string) => issues.push({ level: "warning", message });
+  const err = (code: IssueCode, params: Record<string, string | number> = {}) =>
+    issues.push({ level: "error", code, params });
+  const warn = (code: IssueCode, params: Record<string, string | number> = {}) =>
+    issues.push({ level: "warning", code, params });
 
-  if (!(m.motorRpm > 0)) err("La vitesse moteur doit être supérieure à 0.");
-  if (m.shafts.length < 2) err("Il faut au moins deux arbres (moteur et broche).");
-  if (m.belts.length !== Math.max(0, m.shafts.length - 1))
-    err("Il faut exactement une courroie entre chaque paire d'arbres consécutifs.");
+  if (!(m.motorRpm > 0)) err("motor-rpm");
+  if (m.shafts.length < 2) err("min-shafts");
+  if (m.belts.length !== Math.max(0, m.shafts.length - 1)) err("belt-count");
 
   for (const shaft of m.shafts) {
     for (const stack of shaft.stacks) {
       if (stack.steps.length === 0)
-        err(`« ${stack.label} » (${shaft.label}) n'a aucun étage.`);
+        err("empty-stack", { stack: stack.label, shaft: shaft.label });
       if (stack.steps.some((d) => !(d > 0)))
-        err(`« ${stack.label} » (${shaft.label}) a un diamètre invalide (doit être > 0).`);
+        err("bad-diameter", { stack: stack.label, shaft: shaft.label });
     }
   }
 
@@ -124,20 +167,20 @@ export function validateMachine(m: Machine): Issue[] {
     const from = m.shafts[belt.fromShaft]?.stacks[belt.fromStack];
     const to = m.shafts[belt.toShaft]?.stacks[belt.toStack];
     if (belt.fromShaft !== k || belt.toShaft !== k + 1) {
-      err(`Courroie ${k + 1} : doit relier l'arbre ${k + 1} à l'arbre ${k + 2}.`);
+      err("belt-chain", { belt: k + 1, from: k + 1, to: k + 2 });
       return;
     }
     if (!from || !to) {
-      err(`Courroie ${k + 1} : cône introuvable.`);
+      err("stack-missing", { belt: k + 1 });
       return;
     }
     if (belt.allowedPairs.length === 0) {
-      err(`Courroie ${k + 1} : aucune position définie.`);
+      err("no-pairs", { belt: k + 1 });
       return;
     }
     for (const [i, j] of belt.allowedPairs) {
       if (from.steps[i] === undefined || to.steps[j] === undefined) {
-        err(`Courroie ${k + 1} : position (${i + 1}, ${j + 1}) hors limites.`);
+        err("pair-out-of-range", { belt: k + 1, i: i + 1, j: j + 1 });
         return;
       }
     }
@@ -145,19 +188,11 @@ export function validateMachine(m: Machine): Issue[] {
     const min = Math.min(...sums);
     const max = Math.max(...sums);
     if (min > 0 && (max - min) / max > BELT_SUM_TOLERANCE)
-      warn(
-        `Courroie ${k + 1} : la somme des diamètres varie de plus de ${Math.round(BELT_SUM_TOLERANCE * 100)} % ` +
-          "entre positions — vérifiez la saisie (sur de vrais cônes étagés elle est quasi constante).",
-      );
+      warn("diameter-sum", { belt: k + 1, tolerance: Math.round(BELT_SUM_TOLERANCE * 100) });
   });
 
-  if (
-    issues.every((i) => i.level !== "error") &&
-    enumerateCombinations(m).length === 0
-  )
-    err(
-      "Aucune combinaison possible : sur un cône partagé, les deux courroies ne peuvent pas occuper le même étage.",
-    );
+  if (issues.every((i) => i.level !== "error") && enumerateCombinations(m).length === 0)
+    err("no-combination");
 
   return issues;
 }
@@ -174,22 +209,27 @@ export function isSharedIntermediate(m: Machine, shaftIndex: number): boolean {
  * courroies sur le même cône, étages entrée/sortie forcément distincts) et
  * double cône (un cône par courroie).
  */
-export function setSharedIntermediate(m: Machine, shaftIndex: number, shared: boolean): void {
+export function setSharedIntermediate(
+  m: Machine,
+  shaftIndex: number,
+  shared: boolean,
+  labels: FactoryLabels = DEFAULT_FACTORY_LABELS,
+): void {
   const shaft = m.shafts[shaftIndex];
   if (!shaft || shaftIndex <= 0 || shaftIndex >= m.shafts.length - 1) return;
   const beltIn = m.belts[shaftIndex - 1];
   const beltOut = m.belts[shaftIndex];
   if (shared && shaft.stacks.length > 1) {
     shaft.stacks = [shaft.stacks[0]];
-    shaft.stacks[0].label = "Cône intermédiaire";
+    shaft.stacks[0].label = labels.intermediateCone;
     beltIn.toStack = 0;
     beltOut.fromStack = 0;
   } else if (!shared && shaft.stacks.length === 1) {
     const src = shaft.stacks[0];
-    src.label = "Cône intermédiaire (entrée)";
+    src.label = labels.intermediateConeIn;
     shaft.stacks = [
       src,
-      { id: newId(), label: "Cône intermédiaire (sortie)", steps: [...src.steps] },
+      { id: newId(), label: labels.intermediateConeOut, steps: [...src.steps] },
     ];
     beltIn.toStack = 0;
     beltOut.fromStack = 1;
@@ -220,24 +260,24 @@ export function syncBeltPairs(m: Machine): void {
 }
 
 /** Gabarit : perceuse simple, 2 arbres, 5 vitesses. */
-export function createTwoShaftMachine(): Machine {
+export function createTwoShaftMachine(labels: FactoryLabels = DEFAULT_FACTORY_LABELS): Machine {
   const motor: PulleyStack = {
     id: newId(),
-    label: "Cône moteur",
+    label: labels.motorCone,
     steps: [100, 87, 74, 61, 48],
   };
   const spindle: PulleyStack = {
     id: newId(),
-    label: "Cône broche",
+    label: labels.spindleCone,
     steps: [48, 61, 74, 87, 100],
   };
   return {
     id: newId(),
-    name: "Perceuse 2 arbres",
+    name: labels.twoShaftName,
     motorRpm: 1420,
     shafts: [
-      { id: newId(), label: "Moteur", stacks: [motor] },
-      { id: newId(), label: "Broche", stacks: [spindle] },
+      { id: newId(), label: labels.motorShaft, stacks: [motor] },
+      { id: newId(), label: labels.spindleShaft, stacks: [spindle] },
     ],
     belts: [
       {
@@ -253,35 +293,35 @@ export function createTwoShaftMachine(): Machine {
 }
 
 /** Gabarit : perceuse 3 arbres (poulie intermédiaire à double cône), 12/16 vitesses. */
-export function createThreeShaftMachine(): Machine {
+export function createThreeShaftMachine(labels: FactoryLabels = DEFAULT_FACTORY_LABELS): Machine {
   const motor: PulleyStack = {
     id: newId(),
-    label: "Cône moteur",
+    label: labels.motorCone,
     steps: [110, 90, 70, 50],
   };
   const midIn: PulleyStack = {
     id: newId(),
-    label: "Cône intermédiaire (entrée)",
+    label: labels.intermediateConeIn,
     steps: [50, 70, 90, 110],
   };
   const midOut: PulleyStack = {
     id: newId(),
-    label: "Cône intermédiaire (sortie)",
+    label: labels.intermediateConeOut,
     steps: [110, 90, 70, 50],
   };
   const spindle: PulleyStack = {
     id: newId(),
-    label: "Cône broche",
+    label: labels.spindleCone,
     steps: [50, 70, 90, 110],
   };
   return {
     id: newId(),
-    name: "Perceuse 3 arbres",
+    name: labels.threeShaftName,
     motorRpm: 1420,
     shafts: [
-      { id: newId(), label: "Moteur", stacks: [motor] },
-      { id: newId(), label: "Intermédiaire", stacks: [midIn, midOut] },
-      { id: newId(), label: "Broche", stacks: [spindle] },
+      { id: newId(), label: labels.motorShaft, stacks: [motor] },
+      { id: newId(), label: labels.intermediateShaft, stacks: [midIn, midOut] },
+      { id: newId(), label: labels.spindleShaft, stacks: [spindle] },
     ],
     belts: [
       {

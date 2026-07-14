@@ -1,17 +1,17 @@
 <script lang="ts">
   import { machinesState } from "$lib/state/machines.svelte";
-  import { fr } from "$lib/i18n/fr";
+  import { i18n } from "$lib/i18n/state.svelte";
 
   function remove() {
     const current = machinesState.current;
-    if (current && confirm(fr.machine.deleteConfirm)) machinesState.remove(current.id);
+    if (current && confirm(i18n.t.machine.deleteConfirm)) machinesState.remove(current.id);
   }
 </script>
 
 <div class="picker">
   {#if machinesState.machines.length > 0}
     <label>
-      {fr.machine.pickerLabel}
+      {i18n.t.machine.pickerLabel}
       <select
         value={machinesState.currentId}
         onchange={(e) => machinesState.select(e.currentTarget.value)}
@@ -23,13 +23,13 @@
     </label>
   {/if}
   <button type="button" onclick={() => machinesState.addTwoShaft()}>
-    {fr.machine.newTwoShaft}
+    {i18n.t.machine.newTwoShaft}
   </button>
   <button type="button" onclick={() => machinesState.addThreeShaft()}>
-    {fr.machine.newThreeShaft}
+    {i18n.t.machine.newThreeShaft}
   </button>
   {#if machinesState.current}
-    <button type="button" onclick={remove}>{fr.machine.delete}</button>
+    <button type="button" onclick={remove}>{i18n.t.machine.delete}</button>
   {/if}
 </div>
 
