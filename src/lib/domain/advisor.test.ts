@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { idealRpm, recommend } from "./advisor";
+import { formatDeviation, idealRpm, recommend } from "./advisor";
 import { materialById } from "./materials";
 import { createTwoShaftMachine, defaultPairs, type Machine, type PulleyStack } from "./machine";
 
@@ -35,18 +35,25 @@ describe("recommend", () => {
   // Vitesses disponibles : ≈ 682, 1420, 2958 tr/min
   const m = twoShaft(1420, [100, 74, 48], [48, 74, 100]);
 
-  it("prend la plus rapide des combinaisons sous la vitesse idéale", () => {
-    // Idéal ≈ 1592 tr/min (alu Vc 70, Ø 14) → 1420 est la plus rapide en dessous
+  it("prend la plus proche en dessous quand le dépassement serait trop cher", () => {
+    // Idéal ≈ 1592 tr/min (alu Vc 70, Ø 14) : 1420 (−11 %) bat 2958 (+86 % ×2)
     const r = recommend(m, 70, 14);
     expect(Math.round(r.best.spindleRpm)).toBe(1420);
     expect(r.overspeed).toBe(false);
   });
 
-  it("tolère un dépassement de 5 %", () => {
-    // Idéal ≈ 1409 tr/min : 1420 dépasse de 0,8 % → accepté
-    const r = recommend(m, 31, 7);
-    expect(Math.round(r.best.spindleRpm)).toBe(1420);
+  it("accepte un léger dépassement plutôt qu'un gros sous-régime (720/1220, idéal 1100)", () => {
+    // Le cas de la vraie perceuse : gros trou dans la gamme de vitesses
+    const gap = twoShaft(1000, [72, 122], [100, 100]);
+    const r = recommend(gap, 11 * Math.PI, 10); // idéal = 1100 tr/min exactement
+    expect(Math.round(r.best.spindleRpm)).toBe(1220); // +11 % ×2 bat −35 %
     expect(r.overspeed).toBe(false);
+  });
+
+  it("reste en dessous quand l'idéal est proche de la vitesse inférieure", () => {
+    const gap = twoShaft(1000, [72, 122], [100, 100]);
+    const r = recommend(gap, 8 * Math.PI, 10); // idéal = 800 tr/min
+    expect(Math.round(r.best.spindleRpm)).toBe(720); // −10 % bat +53 % ×2
   });
 
   it("prend la plus lente et signale le dépassement quand tout est trop rapide", () => {
@@ -59,5 +66,13 @@ describe("recommend", () => {
   it("retourne toutes les combinaisons triées pour la table", () => {
     const r = recommend(m, 25, 10);
     expect(r.all.map((c) => Math.round(c.spindleRpm))).toEqual([682, 1420, 2958]);
+  });
+});
+
+describe("deviation", () => {
+  it("formate l'écart signé en pourcentage", () => {
+    expect(formatDeviation(1220, 1100)).toBe("+11 %");
+    expect(formatDeviation(720, 1100)).toBe("−35 %");
+    expect(formatDeviation(1100, 1100)).toBe("+0 %");
   });
 });

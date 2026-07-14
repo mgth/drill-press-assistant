@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatDeviation } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
   import { pairName, type Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
@@ -7,12 +8,15 @@
   let {
     machine,
     combinations,
+    ideal,
     recommendedKey,
     selectedKey,
     onSelect,
   }: {
     machine: Machine;
     combinations: Combination[];
+    /** Vitesse idéale (tr/min) pour la colonne d'écart. */
+    ideal: number;
     recommendedKey: string | null;
     selectedKey: string;
     onSelect: (combo: Combination) => void;
@@ -41,6 +45,7 @@
           <th>{fr.table.position} {k + 1}</th>
         {/each}
         <th class="num">{fr.table.spindleRpm}</th>
+        <th class="num">{fr.table.deviation}</th>
         <th></th>
       </tr>
     </thead>
@@ -56,6 +61,7 @@
             <td>{pairLabel(combo, k)}</td>
           {/each}
           <td class="num"><strong>{Math.round(combo.spindleRpm)}</strong></td>
+          <td class="num muted">{formatDeviation(combo.spindleRpm, ideal)}</td>
           <td class="badges">
             {#if key === recommendedKey}
               <span class="badge rec">{fr.table.recommendedBadge}</span>

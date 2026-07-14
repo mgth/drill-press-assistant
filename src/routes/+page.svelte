@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { recommend } from "$lib/domain/advisor";
+  import { formatDeviation, recommend } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
   import { pairName, validateMachine, type Machine } from "$lib/domain/machine";
   import { advisorState, comboKey } from "$lib/state/advisor.svelte";
@@ -119,6 +119,7 @@
           <span class="position">{positionLabel(machine, displayed)}</span>
           —
           <strong>{Math.round(displayed.spindleRpm)} {fr.advisor.rpm}</strong>
+          <span class="dev">{formatDeviation(displayed.spindleRpm, reco.ideal)}</span>
           <span class="muted">
             ({fr.advisor.idealRpm} : {Math.round(reco.ideal)} {fr.advisor.rpm})
           </span>
@@ -128,6 +129,7 @@
       <SpeedTable
         {machine}
         combinations={reco.all}
+        ideal={reco.ideal}
         {recommendedKey}
         selectedKey={comboKey(displayed.pairs)}
         onSelect={(c) => (advisorState.selectedKey = comboKey(c.pairs))}
@@ -188,5 +190,11 @@
   .position {
     font-weight: 700;
     color: var(--accent);
+  }
+
+  .dev {
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-weight: 600;
   }
 </style>

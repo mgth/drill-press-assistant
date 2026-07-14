@@ -6,8 +6,23 @@ export function idealRpm(vcMPerMin: number, drillDiameterMm: number): number {
   return (vcMPerMin * 1000) / (Math.PI * drillDiameterMm);
 }
 
-/** Tolérance de dépassement de la vitesse idéale acceptée par la recommandation. */
-export const OVERSPEED_TOLERANCE = 1.05;
+/** Écart relatif signé à la vitesse idéale (+0,11 = 11 % trop vite). */
+export function deviation(rpm: number, ideal: number): number {
+  return (rpm - ideal) / ideal;
+}
+
+/** Écart formaté pour l'affichage, ex. « +11 % » ou « −35 % ». */
+export function formatDeviation(rpm: number, ideal: number): string {
+  const pct = Math.round(deviation(rpm, ideal) * 100);
+  return `${pct >= 0 ? "+" : "−"}${Math.abs(pct)} %`;
+}
+
+/**
+ * Dépasser la vitesse de coupe use l'outil (chaleur au bord de coupe) alors
+ * qu'être en dessous ne fait surtout que ralentir : le dépassement compte
+ * double dans le choix de la combinaison.
+ */
+export const OVER_PENALTY_FACTOR = 2;
 
 export interface Recommendation {
   ideal: number;
@@ -20,15 +35,21 @@ export interface Recommendation {
 }
 
 /**
- * Règle : parmi les combinaisons ne dépassant pas la vitesse idéale de plus
- * de 5 %, prendre la plus rapide (en HSS, dépasser Vc brûle le foret ; être
- * en dessous ne fait que ralentir). S'il n'y en a aucune, prendre la plus
- * lente et signaler le dépassement.
+ * Règle : la combinaison la plus proche de la vitesse idéale en écart
+ * relatif, le dépassement étant pénalisé double (idéal 1100, choix 720/1220 →
+ * 1220 : +11 % pondéré ×2 bat −35 %). Si même la plus lente dépasse l'idéal
+ * (petit foret, machine rapide), `overspeed` déclenche l'avertissement.
  */
 export function recommend(m: Machine, vc: number, drillDiameterMm: number): Recommendation {
   const ideal = idealRpm(vc, drillDiameterMm);
   const all = enumerateCombinations(m);
-  const candidates = all.filter((c) => c.spindleRpm <= ideal * OVERSPEED_TOLERANCE);
-  const best = candidates.length > 0 ? candidates[candidates.length - 1] : all[0];
-  return { ideal, best, all, overspeed: candidates.length === 0 };
+  const penalty = (c: Combination) => {
+    const dev = deviation(c.spindleRpm, ideal);
+    return dev >= 0 ? dev * OVER_PENALTY_FACTOR : -dev;
+  };
+  const best = all.reduce<Combination | null>(
+    (a, b) => (a === null || penalty(b) < penalty(a) ? b : a),
+    null,
+  )!;
+  return { ideal, best, all, overspeed: all.length > 0 && all[0].spindleRpm > ideal };
 }

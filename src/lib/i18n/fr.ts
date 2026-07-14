@@ -47,6 +47,7 @@ export const fr = {
     title: "Toutes les vitesses",
     position: "Courroie",
     spindleRpm: "Broche (tr/min)",
+    deviation: "Écart",
     recommendedBadge: "recommandé",
     selectedBadge: "affiché",
   },
