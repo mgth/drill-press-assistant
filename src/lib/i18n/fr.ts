@@ -31,6 +31,7 @@ export const fr = {
   advisor: {
     title: "Paramètres de perçage",
     material: "Matériau",
+    custom: "Personnalisé",
     diameter: "Ø de perçage (mm)",
     bitType: "Type de foret",
     hss: "HSS",

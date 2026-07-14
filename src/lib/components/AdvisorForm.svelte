@@ -16,15 +16,45 @@
     <label>
       {fr.advisor.material}
       <select
-        value={advisorState.materialId}
-        onchange={(e) => advisorState.setMaterial(e.currentTarget.value)}
+        value={advisorState.custom ? "__custom__" : advisorState.materialId}
+        onchange={(e) => {
+          if (e.currentTarget.value !== "__custom__")
+            advisorState.setMaterial(e.currentTarget.value);
+        }}
       >
+        {#if advisorState.custom}
+          <option value="__custom__">{fr.advisor.custom}</option>
+        {/if}
         {#each MATERIALS as mat}
           <option value={mat.id}>{mat.labelFr}</option>
         {/each}
       </select>
     </label>
-    <label>
+    <div class="bit">
+      <span class="bit-label">{fr.advisor.bitType}</span>
+      <div class="seg" role="radiogroup" aria-label={fr.advisor.bitType}>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={!advisorState.carbide && !advisorState.custom}
+          class:active={!advisorState.carbide && !advisorState.custom}
+          onclick={() => advisorState.setCarbide(false)}
+        >
+          {fr.advisor.hss}
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={advisorState.carbide && !advisorState.custom}
+          class:active={advisorState.carbide && !advisorState.custom}
+          onclick={() => advisorState.setCarbide(true)}
+        >
+          {fr.advisor.carbide}
+        </button>
+      </div>
+    </div>
+    <div class="break" aria-hidden="true"></div>
+    <label class="dia">
       {fr.advisor.diameter}
       <input
         type="number"
@@ -45,29 +75,6 @@
         </button>
       {/each}
     </div>
-    <div class="bit">
-      <span class="bit-label">{fr.advisor.bitType}</span>
-      <div class="seg" role="radiogroup" aria-label={fr.advisor.bitType}>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={!advisorState.carbide}
-          class:active={!advisorState.carbide}
-          onclick={() => advisorState.setCarbide(false)}
-        >
-          {fr.advisor.hss}
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={advisorState.carbide}
-          class:active={advisorState.carbide}
-          onclick={() => advisorState.setCarbide(true)}
-        >
-          {fr.advisor.carbide}
-        </button>
-      </div>
-    </div>
     <div class="vc-block">
       <span class="bit-label">{fr.advisor.vc} (m/min)</span>
       <div class="quick" role="group" aria-label={fr.advisor.vc}>
@@ -75,7 +82,7 @@
           <button
             type="button"
             class:active={advisorState.vc === v}
-            onclick={() => (advisorState.vcOverride = v)}
+            onclick={() => advisorState.setVc(v)}
           >
             {v}
           </button>
@@ -155,6 +162,12 @@
   .vc-block {
     flex-basis: 100%;
     min-width: 0;
+  }
+
+  /* Saut de ligne flex : le diamètre ouvre sa propre ligne. */
+  .break {
+    flex-basis: 100%;
+    height: 0;
   }
 
   .bit-label {
