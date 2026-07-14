@@ -25,6 +25,11 @@
     const to = machine.shafts[belt.toShaft].stacks[belt.toStack];
     return `${pairName(belt, combo.pairIndexes[k])} (${from.steps[i]} → ${to.steps[j]} mm)`;
   }
+
+  /** Colonnes dans l'ordre d'affichage du schéma (inversé si broche à gauche). */
+  const beltOrder = $derived(
+    machine.belts.map((_, k) => (machine.spindleLeft ? machine.belts.length - 1 - k : k)),
+  );
 </script>
 
 <div class="card">
@@ -32,7 +37,7 @@
   <table>
     <thead>
       <tr>
-        {#each machine.belts as _, k}
+        {#each beltOrder as k}
           <th>{fr.table.position} {k + 1}</th>
         {/each}
         <th class="num">{fr.table.spindleRpm}</th>
@@ -47,7 +52,7 @@
           class:selected={key === selectedKey}
           onclick={() => onSelect(combo)}
         >
-          {#each machine.belts as _, k}
+          {#each beltOrder as k}
             <td>{pairLabel(combo, k)}</td>
           {/each}
           <td class="num"><strong>{Math.round(combo.spindleRpm)}</strong></td>

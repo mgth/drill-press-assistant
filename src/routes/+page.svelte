@@ -66,9 +66,14 @@
     advisorState.selectedKey = null;
   });
 
-  /** Position en repères machine, ex. « B » (une courroie) ou « 3 – B » (deux). */
+  /**
+   * Position en repères machine, ex. « B » (une courroie) ou « 3 – B »
+   * (deux), dans l'ordre d'affichage du schéma (inversé si broche à gauche).
+   */
   function positionLabel(m: Machine, combo: Combination): string {
-    return m.belts.map((belt, k) => pairName(belt, combo.pairIndexes[k])).join(" – ");
+    const names = m.belts.map((belt, k) => pairName(belt, combo.pairIndexes[k]));
+    if (m.spindleLeft) names.reverse();
+    return names.join(" – ");
   }
   /** Combinaison affichée : sélection manuelle si encore valable, sinon la recommandation. */
   const displayed = $derived.by(() => {
