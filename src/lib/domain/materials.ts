@@ -32,16 +32,13 @@ export function vcMaterial(vc: number, carbide: boolean): Material | null {
   return MATERIALS.find((m) => m.vcHss * factor === vc) ?? null;
 }
 
-/**
- * Valeurs de la frise Vc pour un type de foret : grille de 5 à 100 par pas
- * de 5, plus les Vc des matériaux pour ce type.
- */
+/** Grille de base de la frise Vc (m/min) : fine jusqu'à 50, plus espacée au-delà. */
+const VC_GRID = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200];
+
+/** Valeurs de la frise Vc pour un type de foret : grille de base plus les Vc des matériaux pour ce type. */
 export function vcChipValues(carbide: boolean): number[] {
   const factor = carbide ? CARBIDE_FACTOR : 1;
-  return [
-    ...new Set([
-      ...Array.from({ length: 20 }, (_, i) => (i + 1) * 5),
-      ...MATERIALS.map((m) => m.vcHss * factor),
-    ]),
-  ].sort((a, b) => a - b);
+  return [...new Set([...VC_GRID, ...MATERIALS.map((m) => m.vcHss * factor)])].sort(
+    (a, b) => a - b,
+  );
 }
