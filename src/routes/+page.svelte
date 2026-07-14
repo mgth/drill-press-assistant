@@ -55,6 +55,17 @@
   );
   const recommendedKey = $derived(reco ? comboKey(reco.best.pairs) : null);
 
+  // Tout changement de paramètres de perçage ou de machine invalide la
+  // sélection manuelle : la carte « Position recommandée » suit à nouveau la
+  // recommandation, comme la table.
+  $effect(() => {
+    void advisorState.materialId;
+    void advisorState.diameterMm;
+    void advisorState.carbide;
+    void machinesState.currentId;
+    advisorState.selectedKey = null;
+  });
+
   /** Position en repères machine, ex. « B » (une courroie) ou « 3 – B » (deux). */
   function positionLabel(m: Machine, combo: Combination): string {
     return m.belts.map((belt, k) => pairName(belt, combo.pairIndexes[k])).join(" – ");
