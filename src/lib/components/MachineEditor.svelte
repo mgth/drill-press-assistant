@@ -9,10 +9,15 @@
   import { fr } from "$lib/i18n/fr";
   import BeltPairsEditor from "./BeltPairsEditor.svelte";
   import StackEditor from "./StackEditor.svelte";
+  import Switch from "./Switch.svelte";
 
   let { machine }: { machine: Machine } = $props();
 
   const issues = $derived(validateMachine(machine));
+  /** Cartes d'arbres dans le même ordre que le schéma (et que la machine réelle). */
+  const shaftsDisplay = $derived(
+    machine.spindleLeft ? [...machine.shafts].reverse() : machine.shafts,
+  );
 </script>
 
 <div class="editor">
@@ -25,10 +30,13 @@
       {fr.machine.motorRpm}
       <input type="number" inputmode="numeric" min="1" step="10" bind:value={machine.motorRpm} />
     </label>
-    <label class="check">
-      <input type="checkbox" bind:checked={machine.spindleLeft} />
-      {fr.machine.spindleLeft}
-    </label>
+    <div class="check">
+      <Switch
+        checked={machine.spindleLeft ?? false}
+        label={fr.machine.spindleLeft}
+        onchange={(v) => (machine.spindleLeft = v)}
+      />
+    </div>
   </div>
 
   {#if issues.length > 0}
@@ -40,18 +48,18 @@
   {/if}
 
   <div class="shafts">
-    {#each machine.shafts as shaft, s}
+    {#each shaftsDisplay as shaft (shaft.id)}
+      {@const s = machine.shafts.indexOf(shaft)}
       <div class="card">
         <h3>{shaft.label}</h3>
         {#if s > 0 && s < machine.shafts.length - 1}
-          <label class="shared">
-            <input
-              type="checkbox"
+          <div class="shared">
+            <Switch
               checked={isSharedIntermediate(machine, s)}
-              onchange={(e) => setSharedIntermediate(machine, s, e.currentTarget.checked)}
+              label={fr.machine.sharedCone}
+              onchange={(v) => setSharedIntermediate(machine, s, v)}
             />
-            {fr.machine.sharedCone}
-          </label>
+          </div>
         {/if}
         {#each shaft.stacks as stack}
           <StackEditor {stack} onStepsChanged={() => syncBeltPairs(machine)} />
@@ -90,16 +98,9 @@
     max-width: 14rem;
   }
 
-  label.check {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 400;
+  .check {
     align-self: end;
-  }
-
-  label.check input {
-    min-height: auto;
+    padding-bottom: 0.6rem;
   }
 
   .shafts {
@@ -116,16 +117,8 @@
     font-size: 1rem;
   }
 
-  label.shared {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 400;
+  .shared {
     margin-bottom: 0.6rem;
-  }
-
-  label.shared input {
-    min-height: auto;
   }
 
   .issues {
