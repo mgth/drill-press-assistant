@@ -42,17 +42,29 @@
         </button>
       {/each}
     </div>
-    <fieldset>
-      <legend>{fr.advisor.bitType}</legend>
-      <label class="radio">
-        <input type="radio" name="bit" value={false} bind:group={advisorState.carbide} />
-        {fr.advisor.hss}
-      </label>
-      <label class="radio">
-        <input type="radio" name="bit" value={true} bind:group={advisorState.carbide} />
-        {fr.advisor.carbide}
-      </label>
-    </fieldset>
+    <div class="bit">
+      <span class="bit-label">{fr.advisor.bitType}</span>
+      <div class="seg" role="radiogroup" aria-label={fr.advisor.bitType}>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={!advisorState.carbide}
+          class:active={!advisorState.carbide}
+          onclick={() => (advisorState.carbide = false)}
+        >
+          {fr.advisor.hss}
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={advisorState.carbide}
+          class:active={advisorState.carbide}
+          onclick={() => (advisorState.carbide = true)}
+        >
+          {fr.advisor.carbide}
+        </button>
+      </div>
+    </div>
   </div>
   {#if ideal !== null}
     <p class="ideal">
@@ -116,28 +128,43 @@
     color: #fff;
   }
 
-  fieldset {
-    border: none;
-    margin: 0;
-    padding: 0;
+  .bit {
     display: flex;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 
-  legend {
+  .bit-label {
     font-weight: 600;
-    padding: 0 0 0.3rem;
   }
 
-  .radio {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 400;
+  .seg {
+    display: inline-flex;
+    align-self: start;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--card);
   }
 
-  .radio input {
-    min-height: auto;
+  .seg button {
+    border: none;
+    border-radius: 0;
+    min-height: 40px;
+    min-width: 5.5rem;
+    padding: 0.4rem 1.2rem;
+    background: transparent;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .seg button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .seg button:not(.active):hover {
+    color: var(--fg);
   }
 
   .ideal {
