@@ -31,6 +31,17 @@
         bind:value={advisorState.diameterMm}
       />
     </label>
+    <div class="quick" role="group" aria-label={fr.advisor.diameter}>
+      {#each Array.from({ length: 10 }, (_, i) => i + 1) as d}
+        <button
+          type="button"
+          class:active={advisorState.diameterMm === d}
+          onclick={() => (advisorState.diameterMm = d)}
+        >
+          {d}
+        </button>
+      {/each}
+    </div>
     <fieldset>
       <legend>{fr.advisor.bitType}</legend>
       <label class="radio">
@@ -74,6 +85,26 @@
   label select {
     font-weight: 400;
     max-width: 12rem;
+  }
+
+  .quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex-basis: 100%;
+  }
+
+  .quick button {
+    min-width: 44px;
+    padding: 0.45rem 0;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .quick button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
   }
 
   fieldset {
