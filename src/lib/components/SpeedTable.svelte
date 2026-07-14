@@ -46,7 +46,6 @@
         <th class="num">{fr.table.spindleRpm}</th>
         <th class="num">{fr.table.deviation}</th>
         <th class="num">{fr.table.diaRange}</th>
-        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -62,12 +61,11 @@
           </td>
           <td class="num"><strong>{Math.round(combo.spindleRpm)}</strong></td>
           <td class="num muted">{formatDeviation(combo.spindleRpm, ideal)}</td>
-          <td class="num muted range">{rangeLabel(ranges[idx])}</td>
-          <td class="badges">
+          <td class="num muted range">
+            <div>{rangeLabel(ranges[idx])}</div>
             {#if key === recommendedKey}
               <span class="badge rec">{fr.table.recommendedBadge}</span>
-            {/if}
-            {#if key === selectedKey && key !== recommendedKey}
+            {:else if key === selectedKey}
               <span class="badge sel">{fr.table.selectedBadge}</span>
             {/if}
           </td>
