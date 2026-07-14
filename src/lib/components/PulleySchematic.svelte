@@ -1,11 +1,17 @@
 <script lang="ts">
   import { shaftRpms } from "$lib/domain/calc";
-  import { stepName, type Machine } from "$lib/domain/machine";
+  import { pairName, type Machine } from "$lib/domain/machine";
 
   let {
     machine,
     pairs,
-  }: { machine: Machine; pairs: Array<[number, number]> } = $props();
+    pairIndexes,
+  }: {
+    machine: Machine;
+    pairs: Array<[number, number]>;
+    /** Indices dans allowedPairs, pour afficher le repère de chaque position. */
+    pairIndexes?: number[];
+  } = $props();
 
   // Géométrie (px) : vue de côté, arbres verticaux, moteur à gauche.
   const PX_PER_MM = 1.1;
@@ -83,6 +89,7 @@
         y1: stepMidY(belt.fromShaft, belt.fromStack, i),
         x2: shaftX[belt.toShaft] - (dTo / 2) * PX_PER_MM,
         y2: stepMidY(belt.toShaft, belt.toStack, j),
+        label: pairIndexes ? pairName(belt, pairIndexes[k]) : null,
       };
     });
 
@@ -143,15 +150,18 @@
           class="step"
           class:selected={layout.isSelected(s, st, i)}
         />
-        <text x={layout.shaftX[s]} y={y + STEP_H / 2} class="dia-label">
-          {stepName(stack, i)} · {d}
-        </text>
+        <text x={layout.shaftX[s]} y={y + STEP_H / 2} class="dia-label">{d}</text>
       {/each}
     {/each}
   {/each}
 
   {#each layout.belts as b}
     <line x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} class="belt" />
+    {#if b.label}
+      <text x={(b.x1 + b.x2) / 2} y={Math.min(b.y1, b.y2) - 7} class="belt-label">
+        {b.label}
+      </text>
+    {/if}
   {/each}
 </svg>
 
@@ -205,5 +215,11 @@
     font-size: 9px;
     dominant-baseline: central;
     pointer-events: none;
+  }
+
+  .belt-label {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--accent);
   }
 </style>

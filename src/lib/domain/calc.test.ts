@@ -3,8 +3,10 @@ import { enumerateCombinations, shaftRpms } from "./calc";
 import {
   createThreeShaftMachine,
   createTwoShaftMachine,
+  defaultPairNames,
   defaultPairs,
-  stepName,
+  ensurePairNames,
+  pairName,
   validateMachine,
   type Machine,
   type PulleyStack,
@@ -90,14 +92,37 @@ describe("defaultPairs", () => {
   });
 });
 
-describe("stepName", () => {
-  it("utilise le repère gravé quand il existe, sinon le numéro", () => {
-    const named: PulleyStack = { id: "a", label: "A", steps: [50, 70], stepNames: ["A", "B"] };
-    const bare: PulleyStack = { id: "b", label: "B", steps: [50, 70] };
-    const blank: PulleyStack = { id: "c", label: "C", steps: [50, 70], stepNames: ["", "  "] };
-    expect(stepName(named, 1)).toBe("B");
-    expect(stepName(bare, 1)).toBe("2");
-    expect(stepName(blank, 0)).toBe("1"); // repère vide → retombe sur le numéro
+describe("pairName", () => {
+  it("utilise le repère gravé quand il existe, sinon le numéro de position", () => {
+    const m = createTwoShaftMachine(); // pairNames A..E
+    expect(pairName(m.belts[0], 1)).toBe("B");
+    m.belts[0].pairNames = undefined;
+    expect(pairName(m.belts[0], 1)).toBe("2");
+    m.belts[0].pairNames = ["", " ", "X", "", ""];
+    expect(pairName(m.belts[0], 0)).toBe("1"); // repère vide → numéro
+    expect(pairName(m.belts[0], 2)).toBe("X");
+  });
+
+  it("defaultPairNames : chiffres pour la courroie moteur, lettres ensuite", () => {
+    expect(defaultPairNames(0, 3)).toEqual(["1", "2", "3"]);
+    expect(defaultPairNames(1, 3)).toEqual(["A", "B", "C"]);
+  });
+
+  it("ensurePairNames complète les machines sauvegardées sans repères", () => {
+    const m = createThreeShaftMachine();
+    m.belts[0].pairNames = undefined;
+    m.belts[1].pairNames = ["A", "B"]; // trop court
+    ensurePairNames(m);
+    expect(m.belts[0].pairNames).toEqual(["1", "2", "3", "4"]);
+    expect(m.belts[1].pairNames).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("enumerateCombinations trace l'indice de position de chaque courroie", () => {
+    const m = createTwoShaftMachine();
+    const combos = enumerateCombinations(m);
+    for (const c of combos) {
+      expect(m.belts[0].allowedPairs[c.pairIndexes[0]]).toEqual(c.pairs[0]);
+    }
   });
 });
 

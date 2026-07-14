@@ -9,13 +9,11 @@
 
   function addStep() {
     stack.steps.push(stack.steps[stack.steps.length - 1] ?? 60);
-    stack.stepNames!.push(String(stack.steps.length));
     onStepsChanged();
   }
 
   function removeStep(i: number) {
     stack.steps.splice(i, 1);
-    stack.stepNames!.splice(i, 1);
     onStepsChanged();
   }
 </script>
@@ -25,13 +23,7 @@
   <ol>
     {#each stack.steps as _, i}
       <li>
-        <input
-          class="name"
-          type="text"
-          bind:value={stack.stepNames![i]}
-          aria-label="{stack.label} — {fr.machine.stepName}"
-          title={fr.machine.stepName}
-        />
+        <span class="muted">{fr.machine.step} {i + 1}</span>
         <input
           type="number"
           inputmode="decimal"
@@ -76,11 +68,6 @@
 
   li input {
     width: 6.5rem;
-  }
-
-  li input.name {
-    width: 3.5rem;
-    text-align: center;
   }
 
   li button {

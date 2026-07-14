@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Combination } from "$lib/domain/calc";
-  import { stepName, type Machine } from "$lib/domain/machine";
+  import { pairName, type Machine } from "$lib/domain/machine";
   import { comboKey } from "$lib/state/advisor.svelte";
   import { fr } from "$lib/i18n/fr";
 
@@ -23,7 +23,7 @@
     const [i, j] = combo.pairs[k];
     const from = machine.shafts[belt.fromShaft].stacks[belt.fromStack];
     const to = machine.shafts[belt.toShaft].stacks[belt.toStack];
-    return `${stepName(from, i)} (${from.steps[i]} mm) → ${stepName(to, j)} (${to.steps[j]} mm)`;
+    return `${pairName(belt, combo.pairIndexes[k])} (${from.steps[i]} → ${to.steps[j]} mm)`;
   }
 </script>
 

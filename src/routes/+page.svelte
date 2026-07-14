@@ -1,7 +1,7 @@
 <script lang="ts">
   import { recommend } from "$lib/domain/advisor";
   import type { Combination } from "$lib/domain/calc";
-  import { stepName, validateMachine, type Machine } from "$lib/domain/machine";
+  import { pairName, validateMachine, type Machine } from "$lib/domain/machine";
   import { advisorState, comboKey } from "$lib/state/advisor.svelte";
   import { machinesState } from "$lib/state/machines.svelte";
   import AdvisorForm from "$lib/components/AdvisorForm.svelte";
@@ -55,16 +55,9 @@
   );
   const recommendedKey = $derived(reco ? comboKey(reco.best.pairs) : null);
 
-  /** Position en repères machine, ex. « 3 → B » ou « 2 → A / B → D ». */
+  /** Position en repères machine, ex. « B » (une courroie) ou « 3 – B » (deux). */
   function positionLabel(m: Machine, combo: Combination): string {
-    return m.belts
-      .map((belt, k) => {
-        const [i, j] = combo.pairs[k];
-        const from = m.shafts[belt.fromShaft].stacks[belt.fromStack];
-        const to = m.shafts[belt.toShaft].stacks[belt.toStack];
-        return `${stepName(from, i)} → ${stepName(to, j)}`;
-      })
-      .join("  /  ");
+    return m.belts.map((belt, k) => pairName(belt, combo.pairIndexes[k])).join(" – ");
   }
   /** Combinaison affichée : sélection manuelle si encore valable, sinon la recommandation. */
   const displayed = $derived.by(() => {
@@ -114,7 +107,7 @@
             ({fr.advisor.idealRpm} : {Math.round(reco.ideal)} {fr.advisor.rpm})
           </span>
         </p>
-        <PulleySchematic {machine} pairs={displayed.pairs} />
+        <PulleySchematic {machine} pairs={displayed.pairs} pairIndexes={displayed.pairIndexes} />
       </div>
       <SpeedTable
         {machine}

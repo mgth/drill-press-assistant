@@ -4,6 +4,8 @@ import type { Machine } from "./machine";
 export interface Combination {
   /** pairs[k] = paire [iMenant, iMené] choisie pour belts[k]. */
   pairs: Array<[number, number]>;
+  /** pairIndexes[k] = indice de la paire dans belts[k].allowedPairs (→ repère de position). */
+  pairIndexes: number[];
   /** d_menant / d_mené par courroie. */
   ratios: number[];
   /** motorRpm × Π ratios, en tr/min. */
@@ -28,18 +30,22 @@ export function shaftRpms(m: Machine, pairs: Array<[number, number]>): number[] 
  * croissante. Volume typique : 4 à 16 combinaisons.
  */
 export function enumerateCombinations(m: Machine): Combination[] {
-  let partials: Array<{ pairs: Array<[number, number]>; ratios: number[]; rpm: number }> = [
-    { pairs: [], ratios: [], rpm: m.motorRpm },
-  ];
+  let partials: Array<{
+    pairs: Array<[number, number]>;
+    pairIndexes: number[];
+    ratios: number[];
+    rpm: number;
+  }> = [{ pairs: [], pairIndexes: [], ratios: [], rpm: m.motorRpm }];
 
   m.belts.forEach((belt) => {
     const fromSteps = m.shafts[belt.fromShaft].stacks[belt.fromStack].steps;
     const toSteps = m.shafts[belt.toShaft].stacks[belt.toStack].steps;
     partials = partials.flatMap((p) =>
-      belt.allowedPairs.map(([i, j]) => {
+      belt.allowedPairs.map(([i, j], pairIndex) => {
         const ratio = fromSteps[i] / toSteps[j];
         return {
           pairs: [...p.pairs, [i, j] as [number, number]],
+          pairIndexes: [...p.pairIndexes, pairIndex],
           ratios: [...p.ratios, ratio],
           rpm: p.rpm * ratio,
         };
@@ -48,6 +54,6 @@ export function enumerateCombinations(m: Machine): Combination[] {
   });
 
   return partials
-    .map(({ pairs, ratios, rpm }) => ({ pairs, ratios, spindleRpm: rpm }))
+    .map(({ pairs, pairIndexes, ratios, rpm }) => ({ pairs, pairIndexes, ratios, spindleRpm: rpm }))
     .sort((a, b) => a.spindleRpm - b.spindleRpm);
 }

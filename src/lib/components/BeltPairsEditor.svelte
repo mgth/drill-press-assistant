@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { defaultPairs, stepName, type Belt, type Machine } from "$lib/domain/machine";
+  import {
+    defaultPairNames,
+    defaultPairs,
+    ensurePairNames,
+    type Belt,
+    type Machine,
+  } from "$lib/domain/machine";
   import { fr } from "$lib/i18n/fr";
 
   let { machine, belt, index }: { machine: Machine; belt: Belt; index: number } = $props();
@@ -7,16 +13,25 @@
   const fromStack = $derived(machine.shafts[belt.fromShaft].stacks[belt.fromStack]);
   const toStack = $derived(machine.shafts[belt.toShaft].stacks[belt.toStack]);
 
+  // Aligne les repères sur les positions (machines d'avant les repères,
+  // ou paires retirées par syncBeltPairs).
+  $effect(() => {
+    if (belt.pairNames?.length !== belt.allowedPairs.length) ensurePairNames(machine);
+  });
+
   function addPair() {
     belt.allowedPairs.push([0, 0]);
+    belt.pairNames?.push(defaultPairNames(index, belt.allowedPairs.length).pop()!);
   }
 
   function removePair(i: number) {
     belt.allowedPairs.splice(i, 1);
+    belt.pairNames?.splice(i, 1);
   }
 
   function reset() {
     belt.allowedPairs = defaultPairs(fromStack, toStack);
+    belt.pairNames = defaultPairNames(index, belt.allowedPairs.length);
   }
 </script>
 
@@ -30,15 +45,22 @@
   <ul>
     {#each belt.allowedPairs as pair, i}
       <li>
+        <input
+          class="name"
+          type="text"
+          bind:value={belt.pairNames![i]}
+          aria-label={fr.machine.pairName}
+          title={fr.machine.pairName}
+        />
         <select bind:value={pair[0]} aria-label="étage menant">
           {#each fromStack.steps as d, s}
-            <option value={s}>{stepName(fromStack, s)} ({d} mm)</option>
+            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
           {/each}
         </select>
         →
         <select bind:value={pair[1]} aria-label="étage mené">
           {#each toStack.steps as d, s}
-            <option value={s}>{stepName(toStack, s)} ({d} mm)</option>
+            <option value={s}>{fr.machine.step} {s + 1} ({d} mm)</option>
           {/each}
         </select>
         <button
@@ -73,6 +95,12 @@
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+  }
+
+  li input.name {
+    width: 3.5rem;
+    text-align: center;
+    font-weight: 600;
   }
 
   li button {

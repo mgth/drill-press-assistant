@@ -17,7 +17,7 @@ export const fr = {
     addStep: "Ajouter un étage",
     removeStep: "Retirer",
     stepDiameter: "Ø (mm)",
-    stepName: "Repère de l'étage (tel que gravé sur la machine)",
+    pairName: "Repère de la position (tel que gravé sur la machine)",
     belt: "Courroie",
     beltPairs: "Positions possibles",
     beltPairHint: "étage menant → étage mené",

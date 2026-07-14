@@ -9,19 +9,6 @@ export interface PulleyStack {
   id: string;
   label: string;
   steps: number[];
-  /** Noms des étages tels que gravés sur la machine (ex. A, B, C ou 1, 2, 3). Défaut : numéro. */
-  stepNames?: string[];
-}
-
-export function stepName(stack: PulleyStack, i: number): string {
-  return stack.stepNames?.[i]?.trim() || String(i + 1);
-}
-
-/** Normalise un cône chargé depuis la persistance (données d'avant les repères d'étages). */
-export function ensureStepNames(stack: PulleyStack): void {
-  if (!stack.stepNames || stack.stepNames.length !== stack.steps.length) {
-    stack.stepNames = stack.steps.map((_, i) => stepName(stack, i));
-  }
 }
 
 export interface Shaft {
@@ -40,6 +27,31 @@ export interface Belt {
   toStack: number;
   /** Paires d'étages [iMenant, iMené] physiquement possibles pour la courroie. */
   allowedPairs: Array<[number, number]>;
+  /**
+   * Repères des positions tels que gravés sur la machine (ex. 1, 2, 3 pour la
+   * courroie moteur, A, B, C pour la courroie broche), alignés sur
+   * allowedPairs. Défaut : numéro de la position.
+   */
+  pairNames?: string[];
+}
+
+export function pairName(belt: Belt, i: number): string {
+  return belt.pairNames?.[i]?.trim() || String(i + 1);
+}
+
+/** Repères par défaut : chiffres pour la première courroie, lettres ensuite. */
+export function defaultPairNames(beltIndex: number, count: number): string[] {
+  return Array.from({ length: count }, (_, i) =>
+    beltIndex === 0 ? String(i + 1) : String.fromCharCode(65 + (i % 26)),
+  );
+}
+
+/** Normalise une machine chargée depuis la persistance (données d'avant les repères). */
+export function ensurePairNames(m: Machine): void {
+  m.belts.forEach((belt, k) => {
+    const defaults = defaultPairNames(k, belt.allowedPairs.length);
+    belt.pairNames = belt.allowedPairs.map((_, i) => belt.pairNames?.[i] ?? defaults[i]);
+  });
 }
 
 export interface Machine {
@@ -138,19 +150,25 @@ export function validateMachine(m: Machine): Issue[] {
 }
 
 /**
- * Après modification du nombre d'étages d'un cône : retire les paires hors
- * limites et, s'il n'en reste aucune, retente l'appariement par défaut.
+ * Après modification du nombre d'étages d'un cône : retire les positions hors
+ * limites (et leurs repères) et, s'il n'en reste aucune, retente
+ * l'appariement par défaut.
  */
 export function syncBeltPairs(m: Machine): void {
-  for (const belt of m.belts) {
+  m.belts.forEach((belt, k) => {
     const from = m.shafts[belt.fromShaft]?.stacks[belt.fromStack];
     const to = m.shafts[belt.toShaft]?.stacks[belt.toStack];
-    if (!from || !to) continue;
-    belt.allowedPairs = belt.allowedPairs.filter(
+    if (!from || !to) return;
+    const inRange = belt.allowedPairs.map(
       ([i, j]) => i < from.steps.length && j < to.steps.length,
     );
-    if (belt.allowedPairs.length === 0) belt.allowedPairs = defaultPairs(from, to);
-  }
+    belt.allowedPairs = belt.allowedPairs.filter((_, i) => inRange[i]);
+    belt.pairNames = belt.pairNames?.filter((_, i) => inRange[i]);
+    if (belt.allowedPairs.length === 0) {
+      belt.allowedPairs = defaultPairs(from, to);
+      belt.pairNames = defaultPairNames(k, belt.allowedPairs.length);
+    }
+  });
 }
 
 /** Gabarit : perceuse simple, 2 arbres, 5 vitesses. */
@@ -159,13 +177,11 @@ export function createTwoShaftMachine(): Machine {
     id: newId(),
     label: "Cône moteur",
     steps: [100, 87, 74, 61, 48],
-    stepNames: ["1", "2", "3", "4", "5"],
   };
   const spindle: PulleyStack = {
     id: newId(),
     label: "Cône broche",
     steps: [48, 61, 74, 87, 100],
-    stepNames: ["A", "B", "C", "D", "E"],
   };
   return {
     id: newId(),
@@ -182,6 +198,7 @@ export function createTwoShaftMachine(): Machine {
         toShaft: 1,
         toStack: 0,
         allowedPairs: defaultPairs(motor, spindle),
+        pairNames: ["A", "B", "C", "D", "E"],
       },
     ],
   };
@@ -193,7 +210,6 @@ export function createThreeShaftMachine(): Machine {
     id: newId(),
     label: "Cône moteur",
     steps: [110, 90, 70, 50],
-    stepNames: ["1", "2", "3", "4"],
   };
   const midIn: PulleyStack = {
     id: newId(),
@@ -209,7 +225,6 @@ export function createThreeShaftMachine(): Machine {
     id: newId(),
     label: "Cône broche",
     steps: [50, 70, 90, 110],
-    stepNames: ["A", "B", "C", "D"],
   };
   return {
     id: newId(),
@@ -227,6 +242,7 @@ export function createThreeShaftMachine(): Machine {
         toShaft: 1,
         toStack: 0,
         allowedPairs: defaultPairs(motor, midIn),
+        pairNames: ["1", "2", "3", "4"],
       },
       {
         fromShaft: 1,
@@ -234,6 +250,7 @@ export function createThreeShaftMachine(): Machine {
         toShaft: 2,
         toStack: 0,
         allowedPairs: defaultPairs(midOut, spindle),
+        pairNames: ["A", "B", "C", "D"],
       },
     ],
   };
