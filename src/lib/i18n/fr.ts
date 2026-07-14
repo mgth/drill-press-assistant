@@ -13,6 +13,7 @@ export const fr = {
     deleteConfirm: "Supprimer cette machine ?",
     name: "Nom",
     motorRpm: "Vitesse moteur (tr/min)",
+    spindleLeft: "Broche à gauche sur le schéma (telle que vous voyez la machine)",
     shaft: "Arbre",
     addStep: "Ajouter un étage",
     removeStep: "Retirer",

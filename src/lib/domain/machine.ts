@@ -65,6 +65,8 @@ export interface Machine {
   /** Ordonnés moteur → broche. belts[k] relie shafts[k] à shafts[k+1]. */
   shafts: Shaft[];
   belts: Belt[];
+  /** Affichage du schéma en miroir : broche à gauche, moteur à droite. */
+  spindleLeft?: boolean;
 }
 
 export interface Issue {

@@ -25,6 +25,10 @@
       {fr.machine.motorRpm}
       <input type="number" inputmode="numeric" min="1" step="10" bind:value={machine.motorRpm} />
     </label>
+    <label class="check">
+      <input type="checkbox" bind:checked={machine.spindleLeft} />
+      {fr.machine.spindleLeft}
+    </label>
   </div>
 
   {#if issues.length > 0}
@@ -84,6 +88,18 @@
   label input {
     font-weight: 400;
     max-width: 14rem;
+  }
+
+  label.check {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 400;
+    align-self: end;
+  }
+
+  label.check input {
+    min-height: auto;
   }
 
   .shafts {

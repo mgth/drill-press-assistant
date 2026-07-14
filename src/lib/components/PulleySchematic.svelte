@@ -28,7 +28,7 @@
         (Math.max(...shaft.stacks.flatMap((st) => st.steps), 0) / 2) * PX_PER_MM,
     );
 
-    // Position x de l'axe de chaque arbre.
+    // Position x de l'axe de chaque arbre, moteur → broche de gauche à droite.
     const shaftX: number[] = [];
     machine.shafts.forEach((_, s) => {
       shaftX.push(
@@ -37,6 +37,11 @@
           : shaftX[s - 1] + maxRadius[s - 1] + maxRadius[s] + SHAFT_GAP,
       );
     });
+    const width = shaftX[shaftX.length - 1] + maxRadius[maxRadius.length - 1] + MARGIN_X;
+    // Miroir optionnel : broche à gauche, comme l'utilisateur voit sa machine.
+    if (machine.spindleLeft) {
+      for (let s = 0; s < shaftX.length; s++) shaftX[s] = width - shaftX[s];
+    }
 
     // Rangée verticale de chaque cône : les deux cônes reliés par une
     // courroie sont à la même hauteur (un cône partagé aligne donc les trois
@@ -86,10 +91,12 @@
       const [i, j] = pairs[k] ?? belt.allowedPairs[0];
       const dFrom = machine.shafts[belt.fromShaft].stacks[belt.fromStack].steps[i];
       const dTo = machine.shafts[belt.toShaft].stacks[belt.toStack].steps[j];
+      // La courroie part du bord tourné vers l'arbre suivant, quel que soit le sens d'affichage.
+      const dir = shaftX[belt.fromShaft] <= shaftX[belt.toShaft] ? 1 : -1;
       return {
-        x1: shaftX[belt.fromShaft] + (dFrom / 2) * PX_PER_MM,
+        x1: shaftX[belt.fromShaft] + dir * ((dFrom / 2) * PX_PER_MM),
         y1: stepMidY(belt.fromShaft, belt.fromStack, i),
-        x2: shaftX[belt.toShaft] - (dTo / 2) * PX_PER_MM,
+        x2: shaftX[belt.toShaft] - dir * ((dTo / 2) * PX_PER_MM),
         y2: stepMidY(belt.toShaft, belt.toStack, j),
         label: pairIndexes ? pairName(belt, pairIndexes[k]) : null,
       };
@@ -112,7 +119,7 @@
       belts,
       isSelected,
       rpms,
-      width: shaftX[shaftX.length - 1] + maxRadius[maxRadius.length - 1] + MARGIN_X,
+      width,
       height: bottom + 34,
     };
   });
