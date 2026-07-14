@@ -4,6 +4,8 @@ export interface AdvisorSettings {
   materialId: string;
   diameterMm: number;
   carbide: boolean;
+  /** Vc fixée à la main (m/min), absente/null = dérivée du matériau. */
+  vcOverride?: number | null;
 }
 
 export interface PersistedState {

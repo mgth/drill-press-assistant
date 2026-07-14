@@ -1,9 +1,12 @@
 import { CARBIDE_FACTOR, materialById } from "$lib/domain/materials";
+import type { AdvisorSettings } from "$lib/storage/storage";
 
 class AdvisorState {
   materialId = $state("steel");
   diameterMm = $state(8);
   carbide = $state(false);
+  /** Vc choisie à la main dans la frise ; null = suivre matériau + type de foret. */
+  vcOverride = $state<number | null>(null);
   /**
    * Combinaison choisie manuellement dans la table ou le schéma (null =
    * suivre la recommandation). Clé = JSON des paires.
@@ -11,16 +14,28 @@ class AdvisorState {
   selectedKey = $state<string | null>(null);
 
   get vc(): number {
+    if (this.vcOverride !== null) return this.vcOverride;
     const mat = materialById(this.materialId);
     if (!mat) return 0;
     return mat.vcHss * (this.carbide ? CARBIDE_FACTOR : 1);
   }
 
-  load(saved: { materialId: string; diameterMm: number; carbide: boolean } | null): void {
+  setMaterial(id: string): void {
+    this.materialId = id;
+    this.vcOverride = null;
+  }
+
+  setCarbide(carbide: boolean): void {
+    this.carbide = carbide;
+    this.vcOverride = null;
+  }
+
+  load(saved: AdvisorSettings | null): void {
     if (!saved) return;
     if (materialById(saved.materialId)) this.materialId = saved.materialId;
     if (saved.diameterMm > 0) this.diameterMm = saved.diameterMm;
     this.carbide = saved.carbide;
+    this.vcOverride = saved.vcOverride ?? null;
   }
 }
 

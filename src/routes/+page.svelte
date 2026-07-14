@@ -38,6 +38,7 @@
         materialId: advisorState.materialId,
         diameterMm: advisorState.diameterMm,
         carbide: advisorState.carbide,
+        vcOverride: advisorState.vcOverride,
       },
     };
     const timer = setTimeout(() => backend?.save(snapshot), 500);
@@ -62,6 +63,7 @@
     void advisorState.materialId;
     void advisorState.diameterMm;
     void advisorState.carbide;
+    void advisorState.vcOverride;
     void machinesState.currentId;
     advisorState.selectedKey = null;
   });

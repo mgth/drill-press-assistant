@@ -15,7 +15,10 @@
   <div class="fields">
     <label>
       {fr.advisor.material}
-      <select bind:value={advisorState.materialId}>
+      <select
+        value={advisorState.materialId}
+        onchange={(e) => advisorState.setMaterial(e.currentTarget.value)}
+      >
         {#each MATERIALS as mat}
           <option value={mat.id}>{mat.labelFr}</option>
         {/each}
@@ -50,7 +53,7 @@
           role="radio"
           aria-checked={!advisorState.carbide}
           class:active={!advisorState.carbide}
-          onclick={() => (advisorState.carbide = false)}
+          onclick={() => advisorState.setCarbide(false)}
         >
           {fr.advisor.hss}
         </button>
@@ -59,10 +62,24 @@
           role="radio"
           aria-checked={advisorState.carbide}
           class:active={advisorState.carbide}
-          onclick={() => (advisorState.carbide = true)}
+          onclick={() => advisorState.setCarbide(true)}
         >
           {fr.advisor.carbide}
         </button>
+      </div>
+    </div>
+    <div class="vc-block">
+      <span class="bit-label">{fr.advisor.vc} (m/min)</span>
+      <div class="quick" role="group" aria-label={fr.advisor.vc}>
+        {#each Array.from({ length: 20 }, (_, i) => (i + 1) * 5) as v}
+          <button
+            type="button"
+            class:active={advisorState.vc === v}
+            onclick={() => (advisorState.vcOverride = v)}
+          >
+            {v}
+          </button>
+        {/each}
       </div>
     </div>
   </div>
@@ -128,10 +145,16 @@
     color: #fff;
   }
 
-  .bit {
+  .bit,
+  .vc-block {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+  }
+
+  .vc-block {
+    flex-basis: 100%;
+    min-width: 0;
   }
 
   .bit-label {
