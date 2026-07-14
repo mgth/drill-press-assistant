@@ -1,156 +1,132 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { recommend } from "$lib/domain/advisor";
+  import { validateMachine } from "$lib/domain/machine";
+  import { advisorState, comboKey } from "$lib/state/advisor.svelte";
+  import { machinesState } from "$lib/state/machines.svelte";
+  import AdvisorForm from "$lib/components/AdvisorForm.svelte";
+  import MachineEditor from "$lib/components/MachineEditor.svelte";
+  import MachinePicker from "$lib/components/MachinePicker.svelte";
+  import PulleySchematic from "$lib/components/PulleySchematic.svelte";
+  import SpeedTable from "$lib/components/SpeedTable.svelte";
+  import { fr } from "$lib/i18n/fr";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  let tab = $state<"machine" | "drilling">("machine");
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
-  }
+  if (machinesState.machines.length === 0) machinesState.addTwoShaft();
+
+  const machine = $derived(machinesState.current);
+  const machineValid = $derived(
+    machine !== null && validateMachine(machine).every((i) => i.level !== "error"),
+  );
+  const reco = $derived(
+    machine && machineValid && advisorState.diameterMm > 0 && advisorState.vc > 0
+      ? recommend(machine, advisorState.vc, advisorState.diameterMm)
+      : null,
+  );
+  const recommendedKey = $derived(reco ? comboKey(reco.best.pairs) : null);
+  /** Combinaison affichée : sélection manuelle si encore valable, sinon la recommandation. */
+  const displayed = $derived.by(() => {
+    if (!reco) return null;
+    const manual = reco.all.find((c) => comboKey(c.pairs) === advisorState.selectedKey);
+    return manual ?? reco.best;
+  });
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<main>
+  <header>
+    <h1>{fr.appTitle}</h1>
+    <nav>
+      <button type="button" class:active={tab === "machine"} onclick={() => (tab = "machine")}>
+        {fr.tabs.machine}
+      </button>
+      <button type="button" class:active={tab === "drilling"} onclick={() => (tab = "drilling")}>
+        {fr.tabs.drilling}
+      </button>
+    </nav>
+  </header>
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
+  {#if tab === "machine"}
+    <MachinePicker />
+    {#if machine}
+      <MachineEditor {machine} />
+    {:else}
+      <p class="muted">{fr.machine.noMachine}</p>
+    {/if}
+  {:else}
+    <AdvisorForm />
+    {#if !machine || !machineValid}
+      <p class="warning card">{fr.advisor.invalidMachine}</p>
+    {:else if reco && displayed}
+      {#if reco.overspeed}
+        <p class="warning card">{fr.advisor.overspeedWarning}</p>
+      {/if}
+      <div class="result card">
+        <h2>{fr.advisor.recommended}</h2>
+        <p>
+          <strong>{Math.round(displayed.spindleRpm)} {fr.advisor.rpm}</strong>
+          <span class="muted">
+            ({fr.advisor.idealRpm} : {Math.round(reco.ideal)} {fr.advisor.rpm})
+          </span>
+        </p>
+        <PulleySchematic {machine} pairs={displayed.pairs} />
+      </div>
+      <SpeedTable
+        {machine}
+        combinations={reco.all}
+        {recommendedKey}
+        selectedKey={comboKey(displayed.pairs)}
+        onSelect={(c) => (advisorState.selectedKey = comboKey(c.pairs))}
+      />
+    {/if}
+  {/if}
 </main>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  a:hover {
-    color: #24c8db;
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  h1 {
+    font-size: 1.35rem;
+    margin: 0;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  nav button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .warning {
+    color: var(--warning);
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .result h2 {
+    font-size: 1.1rem;
+  }
+
+  .result p {
+    margin: 0 0 0.75rem;
+    font-size: 1.15rem;
+  }
 </style>

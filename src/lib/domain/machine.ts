@@ -124,6 +124,22 @@ export function validateMachine(m: Machine): Issue[] {
   return issues;
 }
 
+/**
+ * Après modification du nombre d'étages d'un cône : retire les paires hors
+ * limites et, s'il n'en reste aucune, retente l'appariement par défaut.
+ */
+export function syncBeltPairs(m: Machine): void {
+  for (const belt of m.belts) {
+    const from = m.shafts[belt.fromShaft]?.stacks[belt.fromStack];
+    const to = m.shafts[belt.toShaft]?.stacks[belt.toStack];
+    if (!from || !to) continue;
+    belt.allowedPairs = belt.allowedPairs.filter(
+      ([i, j]) => i < from.steps.length && j < to.steps.length,
+    );
+    if (belt.allowedPairs.length === 0) belt.allowedPairs = defaultPairs(from, to);
+  }
+}
+
 /** Gabarit : perceuse simple, 2 arbres, 5 vitesses. */
 export function createTwoShaftMachine(): Machine {
   const motor: PulleyStack = {
