@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "tool-assistant",
   "version": "0.1.0",
   "identifier": "fr.mgth.toolassistant",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 600
+        "title": "Assistant perceuse — vitesses de rotation",
+        "width": 1000,
+        "height": 720
       }
     ],
     "security": {
