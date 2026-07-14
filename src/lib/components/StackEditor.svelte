@@ -27,12 +27,19 @@
         <input
           type="number"
           inputmode="decimal"
-          min="1"
-          step="0.5"
-          bind:value={stack.steps[i]}
+          min={i18n.imperial ? 0.04 : 1}
+          step={i18n.imperial ? 0.0625 : 0.5}
+          value={i18n.displayLen(stack.steps[i])}
+          oninput={(e) => {
+            const v = parseFloat(e.currentTarget.value);
+            if (v > 0) {
+              stack.steps[i] = i18n.parseLen(v);
+              onStepsChanged();
+            }
+          }}
           aria-label="{stack.label} — {i18n.t.machine.stepDiameter}"
         />
-        <span class="muted">mm</span>
+        <span class="muted">{i18n.lenUnit}</span>
         <button
           type="button"
           onclick={() => removeStep(i)}

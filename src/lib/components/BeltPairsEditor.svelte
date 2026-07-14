@@ -54,13 +54,13 @@
         />
         <select bind:value={pair[0]} aria-label={i18n.t.machine.drivingStep}>
           {#each fromStack.steps as d, s}
-            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {d} mm</option>
+            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {i18n.formatLen(d)} {i18n.lenUnit}</option>
           {/each}
         </select>
         <span class="arrow">→</span>
         <select bind:value={pair[1]} aria-label={i18n.t.machine.drivenStep}>
           {#each toStack.steps as d, s}
-            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {d} mm</option>
+            <option value={s}>{i18n.t.machine.stepShort} {s + 1} · {i18n.formatLen(d)} {i18n.lenUnit}</option>
           {/each}
         </select>
         <button

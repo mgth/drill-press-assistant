@@ -10,7 +10,7 @@
   import PulleySchematic from "$lib/components/PulleySchematic.svelte";
   import SpeedTable from "$lib/components/SpeedTable.svelte";
   import { getBackend, type PersistedState, type StorageBackend } from "$lib/storage/storage";
-  import { i18n, LOCALES, type LocaleId } from "$lib/i18n/state.svelte";
+  import { i18n, LOCALES, UNITS, type LocaleId, type UnitsId } from "$lib/i18n/state.svelte";
 
   let tab = $state<"machine" | "drilling">("machine");
   let backend = $state<StorageBackend | null>(null);
@@ -22,6 +22,7 @@
         machinesState.load(saved.machines, saved.currentMachineId);
         advisorState.load(saved.lastAdvisor);
         if (saved.locale) i18n.locale = saved.locale;
+        if (saved.units) i18n.units = saved.units;
       }
       if (machinesState.machines.length === 0) machinesState.addTwoShaft();
       backend = b;
@@ -42,6 +43,7 @@
         vcOverride: advisorState.vcOverride,
       },
       locale: i18n.locale,
+      units: i18n.units,
     };
     const timer = setTimeout(() => backend?.save(snapshot), 500);
     return () => clearTimeout(timer);
@@ -97,6 +99,16 @@
       <button type="button" class:active={tab === "drilling"} onclick={() => (tab = "drilling")}>
         {i18n.t.tabs.drilling}
       </button>
+      <select
+        class="lang"
+        aria-label="Unités / Units"
+        value={i18n.units}
+        onchange={(e) => (i18n.units = e.currentTarget.value as UnitsId)}
+      >
+        {#each UNITS as u}
+          <option value={u.id}>{u.label}</option>
+        {/each}
+      </select>
       <select
         class="lang"
         aria-label="Langue / Language"

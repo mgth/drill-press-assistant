@@ -16,6 +16,8 @@ export interface PersistedState {
   lastAdvisor: AdvisorSettings | null;
   /** Langue de l'interface (absente = français). */
   locale?: "fr" | "en";
+  /** Unités d'affichage (absentes = métrique). */
+  units?: "metric" | "imperial";
 }
 
 export interface StorageBackend {

@@ -165,7 +165,9 @@
           class:selected={layout.isSelected(s, st, i)}
         />
         {#if !mini}
-          <text x={layout.shaftX[s]} y={y + G.stepH / 2} class="dia-label">{d}</text>
+          <text x={layout.shaftX[s]} y={y + G.stepH / 2} class="dia-label">
+            {i18n.formatLen(d)}
+          </text>
         {/if}
       {/each}
     {/each}

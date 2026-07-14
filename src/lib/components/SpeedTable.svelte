@@ -28,7 +28,7 @@
 
   function rangeLabel(r: DiameterRange | null): string {
     if (!r) return "—";
-    const f = (d: number) => i18n.formatNumber(d >= 10 ? Math.round(d * 10) / 10 : Math.round(d * 100) / 100);
+    const f = (d: number) => i18n.formatLen(d);
     if (r.min === null && r.max === null) return i18n.t.table.allDiameters;
     if (r.max === null) return `≥ ${f(r.min!)}`;
     if (r.min === null) return `≤ ${f(r.max)}`;
@@ -45,7 +45,7 @@
         <th>{i18n.t.table.position}</th>
         <th class="num">{i18n.t.table.spindleRpm}</th>
         <th class="num">{i18n.t.table.deviation}</th>
-        <th class="num">{i18n.t.table.diaRange}</th>
+        <th class="num">{i18n.t.table.diaRange} ({i18n.lenUnit})</th>
       </tr>
     </thead>
     <tbody>

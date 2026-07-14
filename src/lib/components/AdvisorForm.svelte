@@ -1,10 +1,19 @@
 <script lang="ts">
   import { MATERIALS, vcChipValues, vcMaterial } from "$lib/domain/materials";
+  import { IMPERIAL_DRILLS } from "$lib/domain/units";
   import { advisorState } from "$lib/state/advisor.svelte";
   import { i18n } from "$lib/i18n/state.svelte";
 
-  const fmt = (v: number) => i18n.formatNumber(v);
-  const vcValues = $derived(vcChipValues(advisorState.carbide));
+  const fmt = (v: number) => i18n.formatVc(v);
+  const vcValues = $derived(vcChipValues(advisorState.carbide, i18n.imperial));
+
+  /** Jetons de diamètre : millimètres entiers, ou forets fractionnaires en impérial. */
+  const diaChips = $derived(
+    i18n.imperial
+      ? IMPERIAL_DRILLS
+      : Array.from({ length: 20 }, (_, i) => ({ label: String(i + 1), mm: i + 1 })),
+  );
+  const diaActive = (mm: number) => Math.abs(advisorState.diameterMm - mm) < 0.01;
 
   let vcRow = $state<HTMLElement>();
   let diaRow = $state<HTMLElement>();
@@ -22,11 +31,13 @@
   $effect(() => {
     void advisorState.vc;
     void advisorState.carbide; // la liste des jetons change aussi
+    void i18n.units; // la grille change en impérial
     revealActive(vcRow);
   });
 
   $effect(() => {
     void advisorState.diameterMm;
+    void i18n.units;
     revealActive(diaRow);
   });
 
@@ -81,7 +92,7 @@
       </div>
     </div>
     <div class="vc-block">
-      <span class="bit-label">{i18n.t.advisor.vc} (m/min)</span>
+      <span class="bit-label">{i18n.t.advisor.vc} ({i18n.vcUnit})</span>
       <div class="quick" role="group" aria-label={i18n.t.advisor.vc} bind:this={vcRow}>
         {#each vcValues as v}
           {@const mat = vcMaterial(v, advisorState.carbide)}
@@ -98,30 +109,34 @@
       </div>
     </div>
     <label class="dia">
-      {i18n.t.advisor.diameter}
+      {i18n.t.advisor.diameter} ({i18n.lenUnit})
       <input
         type="number"
         inputmode="decimal"
-        min="0.5"
-        step="0.5"
-        bind:value={advisorState.diameterMm}
+        min={i18n.imperial ? 0.02 : 0.5}
+        step={i18n.imperial ? 0.0625 : 0.5}
+        value={i18n.displayLen(advisorState.diameterMm)}
+        oninput={(e) => {
+          const v = parseFloat(e.currentTarget.value);
+          if (v > 0) advisorState.diameterMm = i18n.parseLen(v);
+        }}
       />
     </label>
     <div class="quick" role="group" aria-label={i18n.t.advisor.diameter} bind:this={diaRow}>
-      {#each Array.from({ length: 20 }, (_, i) => i + 1) as d}
+      {#each diaChips as chip}
         <button
           type="button"
-          class:active={advisorState.diameterMm === d}
-          onclick={() => (advisorState.diameterMm = d)}
+          class:active={diaActive(chip.mm)}
+          onclick={() => (advisorState.diameterMm = chip.mm)}
         >
-          {d}
+          {chip.label}
         </button>
       {/each}
     </div>
   </div>
   {#if ideal !== null}
     <p class="ideal">
-      {i18n.t.advisor.vc} : <strong>{advisorState.vc} m/min</strong> —
+      {i18n.t.advisor.vc} : <strong>{i18n.formatVc(advisorState.vc)} {i18n.vcUnit}</strong> —
       {i18n.t.advisor.idealRpm} : <strong>{Math.round(ideal)} {i18n.t.advisor.rpm}</strong>
     </p>
   {/if}
