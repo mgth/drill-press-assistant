@@ -6,6 +6,30 @@
   const fmt = (v: number) => String(v).replace(".", ",");
   const vcValues = $derived(vcChipValues(advisorState.carbide));
 
+  let vcRow = $state<HTMLElement>();
+  let diaRow = $state<HTMLElement>();
+
+  /** Centre le jeton actif dans sa frise pour qu'il reste visible. */
+  function revealActive(row: HTMLElement | undefined) {
+    const active = row?.querySelector<HTMLElement>("button.active");
+    if (!row || !active) return;
+    row.scrollTo({
+      left: active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }
+
+  $effect(() => {
+    void advisorState.vc;
+    void advisorState.carbide; // la liste des jetons change aussi
+    revealActive(vcRow);
+  });
+
+  $effect(() => {
+    void advisorState.diameterMm;
+    revealActive(diaRow);
+  });
+
   const ideal = $derived(
     advisorState.diameterMm > 0 && advisorState.vc > 0
       ? (advisorState.vc * 1000) / (Math.PI * advisorState.diameterMm)
@@ -58,7 +82,7 @@
     </div>
     <div class="vc-block">
       <span class="bit-label">{fr.advisor.vc} (m/min)</span>
-      <div class="quick" role="group" aria-label={fr.advisor.vc}>
+      <div class="quick" role="group" aria-label={fr.advisor.vc} bind:this={vcRow}>
         {#each vcValues as v}
           <button
             type="button"
@@ -82,7 +106,7 @@
         bind:value={advisorState.diameterMm}
       />
     </label>
-    <div class="quick" role="group" aria-label={fr.advisor.diameter}>
+    <div class="quick" role="group" aria-label={fr.advisor.diameter} bind:this={diaRow}>
       {#each Array.from({ length: 20 }, (_, i) => i + 1) as d}
         <button
           type="button"
