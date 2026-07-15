@@ -1,7 +1,7 @@
 {
-  "name": "tool-assistant",
+  "name": "drill-press-assistant",
   "version": "0.1.0",
-  "description": "",
+  "description": "Calculateur de vitesse de rotation pour perceuse à colonne (Tauri 2 + Svelte 5).",
   "type": "module",
   "scripts": {
     "dev": "vite dev",

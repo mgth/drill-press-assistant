@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">"tool-assistant"</string>
-    <string name="main_activity_title">"tool-assistant"</string>
+    <string name="app_name">"Drill Press Assistant"</string>
+    <string name="main_activity_title">"Drill Press Assistant"</string>
 </resources>
