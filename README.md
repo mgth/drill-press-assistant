@@ -151,3 +151,13 @@ npm run tauri android build -- --apk   # APK dans src-tauri/gen/android/…
 
 Pour un APK de release signé, voir la
 [documentation Tauri sur la signature Android](https://v2.tauri.app/distribute/sign/android/).
+
+---
+
+## License / Licence
+
+Licensed under the **GNU General Public License v3.0 or later** (GPL-3.0-or-later).
+See [LICENSE](LICENSE) for the full text.
+
+Sous licence **GNU General Public License v3.0 ou ultérieure** (GPL-3.0-or-later).
+Voir [LICENSE](LICENSE) pour le texte complet.
